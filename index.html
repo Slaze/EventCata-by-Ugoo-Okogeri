@@ -1917,8 +1917,50 @@ function scoreDiscoveryItem(item, interests) {
   return score;
 }
 
+let discoveredResults = [];
+
+function renderSocialPlatformLinks(location, keywords) {
+  const host = document.getElementById('discover-social-links');
+  if (!host) return;
+  const q = encodeURIComponent(`${location} ${keywords || ''} upcoming events`);
+  const links = [
+    ['Facebook', `https://www.facebook.com/search/events/?q=${q}`],
+    ['X/Twitter', `https://x.com/search?q=${q}&f=live`],
+    ['TikTok', `https://www.tiktok.com/search?q=${q}`],
+    ['Threads', `https://www.threads.net/search?q=${q}`],
+    ['Instagram', `https://www.instagram.com/explore/search/keyword/?q=${q}`],
+    ['YouTube', `https://www.youtube.com/results?search_query=${q}`],
+    ['Reddit', `https://www.reddit.com/search/?q=${q}&sort=top&t=week`],
+    ['Eventbrite', `https://www.eventbrite.com/d/online/${encodeURIComponent(location)}--events/`],
+    ['Meetup', `https://www.meetup.com/find/?keywords=${q}`],
+    ['Google', `https://www.google.com/search?q=${q}`]
+  ];
+  host.innerHTML = links.map(([label, url]) =>
+    `<a class="discover-link" href="${url}" target="_blank" rel="noopener">${label}</a>`
+  ).join('');
+}
+
+function saveDiscoveredAsInterested(idx) {
+  const item = discoveredResults[idx];
+  if (!item) return;
+  const text = `${item.title || ''}\n${item.description || ''}`;
+  const parsedDate = parseDateFromText(text);
+  const locMatch = text.match(/\b(?:at|venue|location)\s*[:\-]?\s*([^\n,]{3,60})/i);
+  const location = locMatch ? locMatch[1].trim() : '';
+
+  document.getElementById('field-name').value = (item.title || '').slice(0, 120);
+  if (parsedDate) document.getElementById('field-date').value = parsedDate;
+  if (!document.getElementById('field-location').value.trim()) document.getElementById('field-location').value = location;
+  document.getElementById('field-desc').value = `${(item.description || '').replace(/\s+/g, ' ').trim().slice(0, 700)}${item.link ? `\n\nSource: ${item.link}` : ''}`;
+  document.getElementById('field-type').value = 'interested';
+  navigate('create-screen');
+  showToast('Draft interested event created from discovery');
+  trackEvent('discover_saved_as_interested');
+}
+
 async function discoverEventsNow() {
   const location = (document.getElementById('discover-location')?.value || '').trim();
+  const keywords = (document.getElementById('discover-keywords')?.value || '').trim();
   const list = document.getElementById('discover-list');
   if (!location) {
     showToast('Enter your location first');
@@ -1927,6 +1969,7 @@ async function discoverEventsNow() {
   list.innerHTML = '<div class="discover-item-meta">Searching web and social trends...</div>';
 
   const interests = getInterestKeywords();
+  renderSocialPlatformLinks(location, keywords);
   const query = encodeURIComponent(`${location} upcoming events OR concerts OR festivals`);
   const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}`);
 
@@ -1983,11 +2026,16 @@ async function discoverEventsNow() {
     return;
   }
 
-  list.innerHTML = ranked.map((r) => `
-    <a class="discover-item" href="${r.link}" target="_blank" rel="noopener">
+  discoveredResults = ranked;
+  list.innerHTML = ranked.map((r, idx) => `
+    <div class="discover-item">
       <div class="discover-item-title">${r.title || 'Untitled'}</div>
       <div class="discover-item-meta">${r.source} · Match score ${r.score}</div>
-    </a>
+      <div class="discover-actions">
+        <a class="discover-mini-btn" href="${r.link}" target="_blank" rel="noopener">Open Source</a>
+        <button class="discover-mini-btn" type="button" onclick="saveDiscoveredAsInterested(${idx})">Save as Interested</button>
+      </div>
+    </div>
   `).join('');
   showToast(`Found ${ranked.length} trending items`);
   trackEvent('discover_events_completed', { location, results: ranked.length });
