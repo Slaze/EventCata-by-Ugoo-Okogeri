@@ -1021,7 +1021,7 @@ textarea.form-input {
         <button class="discover-btn" type="button" onclick="discoverEventsNow()">Find</button>
       </div>
       <div class="discover-row">
-        <input id="discover-keywords" class="discover-input" type="text" placeholder="Keywords (e.g. shows, comedy night, hangout, festivals)">
+        <input id="discover-keywords" class="discover-input" type="text" placeholder="Optional extra keywords (app auto-learns your interests)">
       </div>
       <div class="discover-item-meta">On-demand pull from public web/blog + social trend signals, then ranked by your event interests.</div>
       <div class="discover-links" id="discover-social-links"></div>
@@ -2047,9 +2047,35 @@ function tokenizeKeywords(input) {
     .filter(Boolean);
 }
 
+function getStoredDiscoverKeywordMemory() {
+  try {
+    const raw = localStorage.getItem('discover-keyword-memory');
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveDiscoverKeywordMemory(tokens) {
+  if (!tokens || tokens.length === 0) return;
+  const current = getStoredDiscoverKeywordMemory();
+  const merged = [...new Set([...tokens.map((t) => t.toLowerCase()), ...current])].slice(0, 120);
+  localStorage.setItem('discover-keyword-memory', JSON.stringify(merged));
+}
+
+function getAutoDiscoverKeywords() {
+  const fromTags = [];
+  allEvents.forEach((e) => (e.tags || []).forEach((t) => fromTags.push(String(t).toLowerCase())));
+  const fromMemory = getStoredDiscoverKeywordMemory();
+  return [...new Set([...fromTags, ...fromMemory])];
+}
+
 function buildDiscoverQuery(locationInput, keywordInput) {
   const locationTokens = tokenizeKeywords(locationInput);
-  const userTokens = tokenizeKeywords(keywordInput);
+  const typedTokens = tokenizeKeywords(keywordInput);
+  const autoTokens = getAutoDiscoverKeywords();
+  const userTokens = [...new Set([...typedTokens, ...autoTokens])];
   const defaultEventTerms = [
     'event', 'events', 'upcoming event', 'upcoming events', 'happening', 'happenings',
     'show', 'shows', 'gig', 'gigs', 'concert', 'concerts', 'live music', 'live show',
@@ -2140,6 +2166,7 @@ async function discoverEventsNow() {
     showToast('Enter your location first');
     return;
   }
+  saveDiscoverKeywordMemory(tokenizeKeywords(keywords));
   list.innerHTML = '<div class="discover-item-meta">Searching web and social trends...</div>';
 
   const interests = getInterestKeywords();
