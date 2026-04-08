@@ -50,6 +50,60 @@ html, body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
+body.splash-active { overflow: hidden; }
+
+/* ─── SPLASH ─── */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  background: radial-gradient(120% 120% at 50% 0%, #0f1726, #070b13 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: opacity 0.35s ease;
+}
+.app-splash.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+.app-splash-card {
+  width: min(92vw, 460px);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  backdrop-filter: blur(6px);
+}
+.app-splash-shot {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 10px;
+}
+.app-splash-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.app-splash-sub { font-size: 12px; color: var(--text3); }
+.app-splash-loader {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.app-splash-loader > div {
+  height: 100%;
+  width: 36%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0a84ff, #30d158);
+  animation: splashLoad 1.1s ease-in-out infinite alternate;
+}
+@keyframes splashLoad {
+  from { transform: translateX(-30%); }
+  to { transform: translateX(190%); }
+}
 
 /* ─── SCREENS ─── */
 .screen {
@@ -515,11 +569,26 @@ html, body {
   padding: 0 4px;
   margin-bottom: 6px;
 }
+.required-mark { color: #ff8d85; margin-left: 4px; }
 .form-field {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+}
+.form-input.is-invalid,
+.form-input-row input.is-invalid {
+  color: #ffd2cf;
+}
+.form-field.is-invalid,
+.form-input-row.is-invalid {
+  border-color: rgba(255,69,58,0.55);
+}
+.field-error {
+  margin: 6px 4px 0;
+  font-size: 12px;
+  color: #ff8d85;
+  min-height: 16px;
 }
 .form-input {
   width: 100%;
@@ -1167,7 +1236,16 @@ textarea.form-input {
 
 </style>
 </head>
-<body>
+<body class="splash-active">
+
+<div class="app-splash" id="app-splash">
+  <div class="app-splash-card">
+    <img class="app-splash-shot" src="/screenshots/app-screenshot.png" alt="EventCata splash preview">
+    <div class="app-splash-title">EventCata by Ugoo Okogeri</div>
+    <div class="app-splash-sub">Preparing your events and community feed...</div>
+    <div class="app-splash-loader"><div></div></div>
+  </div>
+</div>
 
 <!-- ══════════════════ HOME ══════════════════ -->
 <div class="screen active" id="home">
@@ -1236,11 +1314,7 @@ textarea.form-input {
         <input id="discover-location" class="discover-input" type="text" placeholder="Location keywords (state, city, town)">
         <button class="discover-btn" type="button" onclick="discoverEventsNow()">Find</button>
       </div>
-      <div class="discover-row">
-        <input id="discover-keywords" class="discover-input" type="text" placeholder="Optional extra keywords (app auto-learns your interests)">
-      </div>
-      <div class="discover-item-meta">On-demand pull from public web/blog + social trend signals, then ranked by your event interests.</div>
-      <div class="discover-links" id="discover-social-links"></div>
+      <div class="discover-item-meta">Results are automatically ranked by your interests and event relevance.</div>
       <div class="discover-list" id="discover-list"></div>
     </div>
 
@@ -1319,28 +1393,31 @@ textarea.form-input {
     <div style="height:20px"></div>
 
     <div class="form-section">
-      <div class="form-label">Event Name</div>
+      <div class="form-label">Event Name <span class="required-mark">*</span></div>
       <div class="form-field">
         <input class="form-input" id="field-name" type="text" placeholder="e.g. Amanpiano Pool Party 2024">
       </div>
+      <div class="field-error" id="field-name-error"></div>
     </div>
 
     <div class="form-section">
-      <div class="form-label">Details</div>
+      <div class="form-label">Details <span class="required-mark">(Date & Location required)</span></div>
       <div class="form-field">
-        <div class="form-input-row">
+        <div class="form-input-row" id="field-date-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="field-date" placeholder="Date">
+          <input type="date" id="field-date" placeholder="Date" aria-required="true">
         </div>
-        <div class="form-input-row">
+        <div class="form-input-row" id="field-location-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" id="field-location" placeholder="Venue / Location">
+          <input type="text" id="field-location" placeholder="Venue / Location" aria-required="true">
         </div>
         <div class="form-input-row" style="border-bottom:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
           <input type="text" id="field-client" placeholder="Client / Organiser (optional)">
         </div>
       </div>
+      <div class="field-error" id="field-date-error"></div>
+      <div class="field-error" id="field-location-error"></div>
     </div>
 
     <div class="form-section">
@@ -1963,41 +2040,137 @@ function parseDateFromText(text) {
   return null;
 }
 
-function extractFlyerFields(text) {
-  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-  const titleCandidate = lines.find((l) => l.length >= 6 && l.length <= 80 && !/^\d+$/.test(l)) || '';
-  const dateCandidate = parseDateFromText(text);
+function preprocessFlyerDataUrl(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1800;
+      const scale = Math.min(1, maxW / Math.max(1, img.naturalWidth));
+      const w = Math.max(1, Math.round(img.naturalWidth * scale));
+      const h = Math.max(1, Math.round(img.naturalHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(dataUrl);
+      ctx.drawImage(img, 0, 0, w, h);
 
-  let locationCandidate = '';
-  const locLine = lines.find((l) => /\b(venue|location|at)\b/i.test(l));
-  if (locLine) locationCandidate = locLine.replace(/^(venue|location)\s*[:\-]?\s*/i, '').trim();
+      const im = ctx.getImageData(0, 0, w, h);
+      const d = im.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const boosted = Math.max(0, Math.min(255, (g - 128) * 1.5 + 128));
+        d[i] = boosted;
+        d[i + 1] = boosted;
+        d[i + 2] = boosted;
+      }
+      ctx.putImageData(im, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg', 0.92));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+function normalizeOcrText(text) {
+  return String(text || '')
+    .replace(/[|]/g, 'I')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function inferEventName(lines) {
+  const stop = /\b(ticket|gate|time|date|venue|location|rsvp|register|instagram|facebook|twitter|tiktok|whatsapp|call|www\.|http)\b/i;
+  const scored = lines
+    .map((raw) => raw.trim())
+    .filter((l) => l.length >= 4 && l.length <= 90 && !/^\d+$/.test(l))
+    .map((l) => {
+      let score = 0;
+      if (/[A-Z]{3,}/.test(l.replace(/[^A-Z]/g, ''))) score += 2;
+      if (/\b(event|festival|concert|show|party|conference|meetup|summit|workshop|hangout|night)\b/i.test(l)) score += 3;
+      if (stop.test(l)) score -= 3;
+      if (l.length >= 10 && l.length <= 54) score += 2;
+      return { l, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scored[0]?.l || '';
+}
+
+function inferLocation(lines, fullText) {
+  const pref = lines.find((l) => /\b(venue|location)\b\s*[:\-]/i.test(l));
+  if (pref) return pref.replace(/.*\b(venue|location)\b\s*[:\-]?\s*/i, '').trim();
+  const atMatch = fullText.match(/\b(?:at|venue|location)\s*[:\-]?\s*([^\n,]{3,80})/i);
+  if (atMatch) return atMatch[1].trim();
+  const byComma = lines.find((l) => /\b(road|street|st\.|avenue|ave|hall|center|centre|hotel|club|arena|park)\b/i.test(l));
+  return byComma || '';
+}
+
+function inferHost(lines, fullText) {
+  const hostLine = lines.find((l) => /\b(hosted by|organised by|organized by|presented by|powered by|sponsored by)\b/i.test(l));
+  if (hostLine) return hostLine.replace(/.*\b(by)\b\s*/i, '').trim();
+  const m = fullText.match(/\b(?:hosted by|presented by|sponsored by)\s+([^\n]{3,60})/i);
+  return m ? m[1].trim() : '';
+}
+
+function inferTags(text) {
+  const pool = ['concert', 'festival', 'party', 'comedy', 'conference', 'meetup', 'workshop', 'hangout', 'nightlife', 'expo', 'show'];
+  const lower = text.toLowerCase();
+  return pool.filter((t) => lower.includes(t)).slice(0, 5);
+}
+
+function extractFlyerFields(text) {
+  const cleaned = normalizeOcrText(text);
+  const lines = cleaned.split('\n').map((l) => l.trim()).filter(Boolean);
+  const titleCandidate = inferEventName(lines);
+  const dateCandidate = parseDateFromText(cleaned);
+  const locationCandidate = inferLocation(lines, cleaned);
+  const hostCandidate = inferHost(lines, cleaned);
+  const tags = inferTags(cleaned);
 
   return {
     name: titleCandidate,
     date: dateCandidate,
     location: locationCandidate,
-    description: lines.slice(0, 8).join(' ').slice(0, 800)
+    client: hostCandidate,
+    tags,
+    description: lines.slice(0, 10).join(' ').slice(0, 900)
   };
 }
 
 async function autoFillFromFlyer() {
-  const flyer = pickedFiles.find((p) => (p.mediaType || '').startsWith('image/'));
-  if (!flyer) {
+  const flyers = pickedFiles.filter((p) => (p.mediaType || '').startsWith('image/')).slice(0, 3);
+  if (flyers.length === 0) {
     showToast('Add at least one flyer image first');
     return;
   }
   document.getElementById('field-type').value = 'interested';
-  showToast('Reading flyer text...');
+  showToast(`Reading flyer${flyers.length > 1 ? 's' : ''} with AI OCR...`);
   try {
     const T = await loadTesseract();
-    const { data } = await T.recognize(flyer.dataUrl, 'eng');
-    const info = extractFlyerFields(data?.text || '');
+    const chunks = [];
+    for (let i = 0; i < flyers.length; i++) {
+      const raw = flyers[i].dataUrl;
+      const pre = await preprocessFlyerDataUrl(raw);
+      const [a, b] = await Promise.all([
+        T.recognize(raw, 'eng', { tessedit_pageseg_mode: 6 }),
+        T.recognize(pre, 'eng', { tessedit_pageseg_mode: 6 })
+      ]);
+      const textA = normalizeOcrText(a?.data?.text || '');
+      const textB = normalizeOcrText(b?.data?.text || '');
+      chunks.push(textB.length > textA.length ? textB : textA);
+    }
+    const info = extractFlyerFields(chunks.join('\n\n'));
     if (info.name && !document.getElementById('field-name').value.trim()) document.getElementById('field-name').value = info.name;
     if (info.date && !document.getElementById('field-date').value) document.getElementById('field-date').value = info.date;
     if (info.location && !document.getElementById('field-location').value.trim()) document.getElementById('field-location').value = info.location;
+    if (info.client && !document.getElementById('field-client').value.trim()) document.getElementById('field-client').value = info.client;
+    if (info.tags && info.tags.length > 0 && !document.getElementById('field-tags').value.trim()) document.getElementById('field-tags').value = info.tags.join(', ');
     if (info.description && !document.getElementById('field-desc').value.trim()) document.getElementById('field-desc').value = info.description;
     showToast('Flyer scan complete. Review and edit fields.');
-    trackEvent('flyer_autofill_completed', { has_name: !!info.name, has_date: !!info.date, has_location: !!info.location });
+    trackEvent('flyer_autofill_completed', { has_name: !!info.name, has_date: !!info.date, has_location: !!info.location, has_client: !!info.client });
   } catch {
     showToast('Could not extract text from flyer');
     trackEvent('flyer_autofill_failed');
@@ -2198,6 +2371,14 @@ function setCommunityUploadProgress(pct, done) {
   label.textContent = `Uploading... ${safePct}%`;
 }
 
+function hideAppSplash() {
+  const splash = document.getElementById('app-splash');
+  if (!splash) return;
+  splash.classList.add('hide');
+  document.body.classList.remove('splash-active');
+  setTimeout(() => splash.remove(), 420);
+}
+
 function isIos() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
@@ -2314,6 +2495,10 @@ openDB().then(async () => {
   initInstallHelper();
   checkDueReminders();
   trackEvent('app_loaded', { existing_events: allEvents.length });
+  setTimeout(hideAppSplash, 450);
+}).catch(() => {
+  showStickyNotice('App failed to initialize. Refresh and try again.');
+  setTimeout(hideAppSplash, 600);
 });
 
 // ══════════════════════════════════════════
@@ -2620,7 +2805,7 @@ function openSocialSearch(platform) {
 
 async function discoverEventsNow() {
   const location = (document.getElementById('discover-location')?.value || '').trim();
-  const keywords = (document.getElementById('discover-keywords')?.value || '').trim();
+  const keywords = '';
   const list = document.getElementById('discover-list');
   if (!location) {
     showToast('Enter your location first');
@@ -3386,6 +3571,75 @@ function setSaveState(state, message) {
   status.textContent = message || '';
 }
 
+function clearFormErrors() {
+  ['field-name', 'field-date', 'field-location'].forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) input.classList.remove('is-invalid');
+  });
+  ['field-name-error', 'field-date-error', 'field-location-error'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  ['field-date-row', 'field-location-row'].forEach((id) => {
+    const row = document.getElementById(id);
+    if (row) row.classList.remove('is-invalid');
+  });
+  document.querySelectorAll('.form-field.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+}
+
+function setFieldError(fieldId, message) {
+  const input = document.getElementById(fieldId);
+  const error = document.getElementById(`${fieldId}-error`);
+  if (input) input.classList.add('is-invalid');
+  if (error) error.textContent = message;
+  if (fieldId === 'field-date' || fieldId === 'field-location') {
+    const row = document.getElementById(`${fieldId}-row`);
+    if (row) row.classList.add('is-invalid');
+  } else if (input) {
+    const wrapper = input.closest('.form-field');
+    if (wrapper) wrapper.classList.add('is-invalid');
+  }
+}
+
+function validateEventForm() {
+  clearFormErrors();
+  const errors = [];
+  const name = document.getElementById('field-name')?.value.trim() || '';
+  const date = document.getElementById('field-date')?.value || '';
+  const location = document.getElementById('field-location')?.value.trim() || '';
+
+  if (!name) errors.push({ id: 'field-name', msg: 'Event name is required.' });
+  if (!date) errors.push({ id: 'field-date', msg: 'Event date is required.' });
+  if (!location) errors.push({ id: 'field-location', msg: 'Venue/location is required.' });
+
+  errors.forEach((e) => setFieldError(e.id, e.msg));
+  if (errors.length > 0) {
+    const first = document.getElementById(errors[0].id);
+    if (first) {
+      first.focus({ preventScroll: true });
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    showStickyNotice(`Please fix: ${errors[0].msg}`);
+    return null;
+  }
+  return { name, date, location };
+}
+
+['field-name', 'field-date', 'field-location'].forEach((id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    if (!el.classList.contains('is-invalid')) return;
+    const error = document.getElementById(`${id}-error`);
+    const row = document.getElementById(`${id}-row`);
+    const wrapper = el.closest('.form-field');
+    el.classList.remove('is-invalid');
+    if (row) row.classList.remove('is-invalid');
+    if (wrapper) wrapper.classList.remove('is-invalid');
+    if (error) error.textContent = '';
+  });
+});
+
 function showStickyNotice(message) {
   const wrap = document.getElementById('sticky-notice');
   const text = document.getElementById('sticky-notice-text');
@@ -3403,8 +3657,9 @@ function hideStickyNotice() {
 }
 
 async function saveEvent() {
-  const name = document.getElementById('field-name').value.trim();
-  if (!name) { showToast('Please enter an event name'); return; }
+  const validation = validateEventForm();
+  if (!validation) return;
+  const { name, date, location } = validation;
   setSaveState('saving');
 
   const tagsRaw = document.getElementById('field-tags').value;
@@ -3417,8 +3672,8 @@ async function saveEvent() {
   const ev = {
     id: editMode ? currentEventId : ('ev_' + Date.now()),
     name,
-    date: document.getElementById('field-date').value,
-    location: document.getElementById('field-location').value.trim(),
+    date,
+    location,
     client: document.getElementById('field-client').value.trim(),
     description: document.getElementById('field-desc').value.trim(),
     eventType,
