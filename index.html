@@ -52,6 +52,7 @@ html, body {
   font-family: var(--font);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
 body.splash-active { overflow: hidden; }
 body::before {
@@ -103,8 +104,9 @@ body::before {
   display: block;
   margin-bottom: 10px;
 }
-.app-splash-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.app-splash-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
 .app-splash-sub { font-size: 12px; color: var(--text3); }
+.app-splash-title { text-align: center; letter-spacing: 0.2px; }
 .app-splash-loader {
   margin: 14px auto 0;
   width: 64px;
@@ -193,6 +195,68 @@ body::before {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
+.home-nav-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.home-menu-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.home-menu-btn svg { width: 18px; height: 18px; }
+.network-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--surface);
+}
+.network-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30d158;
+  box-shadow: 0 0 0 0 rgba(48,209,88,0.4);
+  animation: netPulse 1.8s ease-out infinite;
+}
+.network-pill.offline .network-pill-dot {
+  background: #ff453a;
+  box-shadow: 0 0 0 0 rgba(255,69,58,0.38);
+}
+.network-pill.offline { color: #ffd2cf; border-color: rgba(255,69,58,0.35); }
+@keyframes netPulse {
+  0% { box-shadow: 0 0 0 0 rgba(48,209,88,0.38); }
+  100% { box-shadow: 0 0 0 10px rgba(48,209,88,0); }
+}
+@media (max-width: 560px) {
+  #network-pill-detail,
+  #network-pill-create {
+    min-height: 28px;
+    min-width: 28px;
+    width: 28px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+  #network-pill-text-detail,
+  #network-pill-text-create {
+    display: none;
+  }
+}
 .navbar-large .large-title {
   font-size: 34px;
   font-weight: 700;
@@ -235,6 +299,29 @@ body::before {
 #home .search-wrap {
   padding: 12px 16px 8px;
 }
+.session-meta {
+  margin: 8px 16px 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--glass), var(--surface);
+  box-shadow: var(--elev-1);
+}
+.session-meta-title {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+.session-meta-value {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.35;
+}
+.session-meta-updated {
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--text3);
+}
 .search-bar {
   background: var(--glass), var(--surface);
   border: 1px solid var(--border);
@@ -276,6 +363,7 @@ body::before {
 .filter-row::-webkit-scrollbar { display: none; }
 .toolbar-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 0 16px 10px;
   align-items: center;
@@ -289,7 +377,18 @@ body::before {
   font-size: 12px;
   font-family: var(--font);
 }
-.toolbar-check { display: inline-flex; align-items: center; gap: 6px; }
+.toolbar-check { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 560px) {
+  .toolbar-select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .toolbar-check {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    justify-content: center;
+  }
+}
 .pill {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -579,6 +678,56 @@ body::before {
 .meta-row-content { flex: 1; }
 .meta-row-label { font-size: 12px; color: var(--text2); margin-bottom: 1px; }
 .meta-row-value { font-size: 15px; font-weight: 500; }
+.ticket-wrap {
+  background: var(--glass), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: var(--elev-1);
+}
+.ticket-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.ticket-sub { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+.ticket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ticket-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-size: 13px;
+  font-family: var(--font);
+}
+.ticket-input.full { grid-column: 1 / -1; }
+.ticket-buy-btn {
+  width: 100%;
+  margin-top: 9px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 600;
+}
+.ticket-buyers {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+.ticket-buyer-item {
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 11px;
+  color: var(--text2);
+}
+@media (max-width: 560px) {
+  .ticket-grid { grid-template-columns: 1fr; }
+}
 
 .section-title {
   font-size: 20px;
@@ -948,6 +1097,52 @@ textarea.form-input {
   height: 24px;
   font-size: 14px;
 }
+.map-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: none;
+  align-items: flex-end;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(3px);
+}
+.map-sheet.show { display: flex; }
+.map-sheet-card {
+  width: 100%;
+  border-radius: 18px 18px 0 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 10px 14px calc(14px + var(--safe-bottom));
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform .22s ease, opacity .22s ease;
+}
+.map-sheet.show .map-sheet-card { transform: translateY(0); opacity: 1; }
+.map-sheet-grab {
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  margin: 2px auto 10px;
+  background: rgba(255,255,255,0.24);
+}
+.map-sheet-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.map-sheet-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  text-align: left;
+}
+.map-sheet-btn:active { transform: translateY(1px); }
+
+button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-btn, .fab {
+  touch-action: manipulation;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 .danger-btn {
   width: calc(100% - 32px);
@@ -979,16 +1174,74 @@ textarea.form-input {
 }
 .stat-num { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 1px; }
-.ops-row { display: flex; gap: 8px; padding: 0 16px 10px; }
-.ops-btn {
-  flex: 1;
+.admin-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 560;
+  display: none;
+  background: rgba(0,0,0,0.45);
+}
+.admin-drawer.show { display: block; }
+.admin-drawer-panel {
+  width: min(84vw, 320px);
+  height: 100%;
+  background: #101114;
+  border-right: 1px solid var(--border);
+  padding: calc(var(--safe-top) + 10px) 14px calc(var(--safe-bottom) + 16px);
+  transform: translateX(-102%);
+  transition: transform .24s ease;
+  box-shadow: 14px 0 34px rgba(0,0,0,0.35);
+}
+.admin-drawer.show .admin-drawer-panel { transform: translateX(0); }
+.admin-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.admin-sub { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.admin-lock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #ffd37a;
+  background: rgba(255,211,122,0.12);
+  border: 1px solid rgba(255,211,122,0.35);
+  border-radius: 999px;
+  padding: 4px 9px;
+  margin-bottom: 10px;
+}
+.admin-btn {
+  width: 100%;
   border: 1px solid var(--border);
   background: var(--surface);
-  color: var(--text2);
-  border-radius: 10px;
-  padding: 9px 10px;
-  font-size: 12px;
+  color: var(--text);
+  border-radius: 11px;
+  padding: 11px 12px;
+  font-size: 13px;
   font-family: var(--font);
+  text-align: left;
+  margin-bottom: 8px;
+}
+.admin-btn.danger {
+  border-color: rgba(255,69,58,0.4);
+  color: #ffb4ad;
+  background: rgba(255,69,58,0.09);
+}
+.admin-lock-wrap, .admin-actions { display: none; }
+.admin-lock-wrap.show, .admin-actions.show { display: block; }
+.admin-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255,255,255,0.14);
+}
+.admin-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.admin-section-title {
+  font-size: 11px;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 7px;
 }
 .insights-card {
   margin: 0 16px 12px;
@@ -1002,6 +1255,18 @@ textarea.form-input {
 .insights-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
 .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .insight-mini { font-size: 12px; color: var(--text2); }
+.ticket-dashboard-card {
+  margin: 0 16px 12px;
+  background: var(--glass), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: none;
+  box-shadow: var(--elev-1);
+}
+.ticket-dashboard-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.ticket-dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ticket-dashboard-mini { font-size: 12px; color: var(--text2); }
 .event-map-wrap {
   margin: 0 16px 12px;
   background: var(--glass), var(--surface);
@@ -1475,6 +1740,15 @@ textarea.form-input {
 <!-- ══════════════════ HOME ══════════════════ -->
 <div class="screen active" id="home">
   <div class="navbar navbar-large" id="home-navbar">
+    <div class="home-nav-row">
+      <button class="home-menu-btn" type="button" onclick="openAdminDrawer()" aria-label="Open admin menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="network-pill" id="network-pill" aria-live="polite">
+        <span class="network-pill-dot" aria-hidden="true"></span>
+        <span id="network-pill-text">Online</span>
+      </div>
+    </div>
     <div>
       <div class="large-title">EventCata</div>
       <div class="subtitle" id="home-subtitle">Loading…</div>
@@ -1487,6 +1761,11 @@ textarea.form-input {
         <button class="install-helper-btn primary" id="install-helper-action" type="button">Install</button>
         <button class="install-helper-btn" id="install-helper-dismiss" type="button">Later</button>
       </div>
+    </div>
+    <div class="session-meta" id="session-meta">
+      <div class="session-meta-title">Current Session</div>
+      <div class="session-meta-value" id="session-meta-value">Getting your time, date, and location...</div>
+      <div class="session-meta-updated" id="session-meta-updated">Last updated: just now</div>
     </div>
     <div class="search-wrap">
       <div class="search-bar">
@@ -1516,11 +1795,6 @@ textarea.form-input {
       <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Media</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-years">0</div><div class="stat-label">Years</div></div>
     </div>
-    <div class="ops-row">
-      <button class="ops-btn" type="button" onclick="exportEventsBackup()">Backup</button>
-      <button class="ops-btn" type="button" onclick="document.getElementById('restore-input').click()">Restore</button>
-      <input id="restore-input" type="file" accept="application/json" style="display:none">
-    </div>
     <div class="insights-card" id="insights-card">
       <div class="insights-title">Mini Dashboard</div>
       <div class="insights-grid">
@@ -1528,6 +1802,15 @@ textarea.form-input {
         <div class="insight-mini" id="insight-active-hosts">Active hosts: 0</div>
         <div class="insight-mini" id="insight-top-event">Top trending: —</div>
         <div class="insight-mini" id="insight-community-total">Community posts: 0</div>
+      </div>
+    </div>
+    <div class="insights-card" id="ticket-insights-card">
+      <div class="insights-title">Ticket Sales Dashboard</div>
+      <div class="insights-grid">
+        <div class="insight-mini" id="insight-ticket-sold">Tickets sold: 0</div>
+        <div class="insight-mini" id="insight-ticket-buyers">Registered buyers: 0</div>
+        <div class="insight-mini" id="insight-ticket-revenue">Est. revenue: NGN 0</div>
+        <div class="insight-mini" id="insight-ticket-top-event">Top sales event: —</div>
       </div>
     </div>
     <div class="event-map-wrap" id="event-map-wrap">
@@ -1585,6 +1868,40 @@ textarea.form-input {
   </button>
 </div>
 
+<div class="admin-drawer" id="admin-drawer" onclick="closeAdminDrawer()">
+  <div class="admin-drawer-panel" onclick="event.stopPropagation()">
+    <div class="admin-title">Advanced / Admin</div>
+    <div class="admin-lock-chip" id="admin-lock-chip">Locked</div>
+    <div class="admin-sub" id="admin-subtext">System tools and maintenance actions</div>
+
+    <div class="admin-lock-wrap show" id="admin-lock-wrap">
+      <button class="admin-btn" type="button" onclick="unlockAdmin()">Verify with Passkey</button>
+      <button class="admin-btn" type="button" onclick="setupOwnerPasskey()">Setup Owner Passkey</button>
+    </div>
+
+    <div class="admin-actions" id="admin-actions">
+      <div class="admin-section">
+        <div class="admin-section-title">System</div>
+        <button class="admin-btn" type="button" onclick="exportEventsBackup()">Export Backup</button>
+        <button class="admin-btn" type="button" onclick="document.getElementById('restore-input').click()">Restore Backup</button>
+        <button class="admin-btn" type="button" onclick="authorizeAdditionalPasskey()">Authorize Another Passkey</button>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title">Developer</div>
+        <button class="admin-btn" type="button" onclick="syncOfflineNow()">Sync Offline Queue</button>
+        <button class="admin-btn" type="button" onclick="clearRuntimeCacheNow()">Clear Runtime Cache</button>
+        <button class="admin-btn" type="button" onclick="forceServiceWorkerUpdateNow()">Force SW Update</button>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title">Danger Zone</div>
+        <button class="admin-btn danger" type="button" onclick="clearAllLocalDataNow()">Reset All Local Data</button>
+      </div>
+    </div>
+
+    <input id="restore-input" type="file" accept="application/json" style="display:none">
+  </div>
+</div>
+
 <!-- ══════════════════ DETAIL ══════════════════ -->
 <div class="screen" id="detail">
   <div class="navbar" id="detail-navbar">
@@ -1593,7 +1910,13 @@ textarea.form-input {
       Events
     </button>
     <span class="navbar-title" id="detail-nav-title"></span>
-    <button class="nav-btn right" onclick="openEdit()" style="color:var(--accent)">Edit</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="network-pill" id="network-pill-detail" aria-live="polite">
+        <span class="network-pill-dot" aria-hidden="true"></span>
+        <span id="network-pill-text-detail">Online</span>
+      </div>
+      <button class="nav-btn right" onclick="openEdit()" style="color:var(--accent)">Edit</button>
+    </div>
   </div>
   <div class="scroll" id="detail-scroll">
     <div class="photo-hero" id="detail-hero">
@@ -1603,6 +1926,18 @@ textarea.form-input {
       <div class="detail-title" id="detail-title"></div>
       <div class="detail-desc" id="detail-desc"></div>
       <div class="meta-card" id="detail-meta-card"></div>
+      <div class="ticket-wrap">
+        <div class="ticket-title">Ticket Purchase</div>
+        <div class="ticket-sub" id="ticket-subtext">Buy tickets and send invoice to organiser WhatsApp.</div>
+        <div class="ticket-grid">
+          <input class="ticket-input" id="ticket-buyer-name" type="text" placeholder="Buyer name">
+          <input class="ticket-input" id="ticket-buyer-phone" type="tel" placeholder="Buyer phone">
+          <input class="ticket-input full" id="ticket-buyer-email" type="email" placeholder="Buyer email (optional)">
+          <input class="ticket-input" id="ticket-qty" type="number" min="1" value="1" placeholder="Tickets">
+        </div>
+        <button class="ticket-buy-btn" type="button" onclick="buyTicketsForCurrentEvent()">Buy Ticket</button>
+        <div class="ticket-buyers" id="ticket-buyers-list"></div>
+      </div>
       <div class="section-title" id="detail-photos-title" style="display:none">Media</div>
       <div class="photo-grid" id="detail-photo-grid"></div>
       <div class="community-wrap">
@@ -1648,7 +1983,10 @@ textarea.form-input {
   <div class="navbar">
     <button class="nav-btn" onclick="cancelCreate()">Cancel</button>
     <span class="navbar-title" id="create-screen-title">New Event</span>
-    <div style="min-width:60px"></div>
+    <div class="network-pill" id="network-pill-create" aria-live="polite">
+      <span class="network-pill-dot" aria-hidden="true"></span>
+      <span id="network-pill-text-create">Online</span>
+    </div>
   </div>
   <div class="scroll">
     <div style="height:20px"></div>
@@ -1710,6 +2048,13 @@ textarea.form-input {
         <textarea class="form-input" id="field-team-members" placeholder="Team members (one per line): Name | Role | Phone/Email"></textarea>
       </div>
       <button type="button" class="album-import-btn" onclick="pickTeamContacts()">Add team from contacts</button>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">Ticketing</div>
+      <div class="form-field">
+        <input class="form-input" id="field-ticket-price" type="number" min="0" step="100" placeholder="Ticket price in NGN (optional)">
+      </div>
     </div>
 
     <div class="form-section">
@@ -1818,6 +2163,16 @@ textarea.form-input {
 <div class="sticky-notice" id="sticky-notice">
   <div class="sticky-notice-text" id="sticky-notice-text"></div>
   <button class="sticky-notice-close" type="button" onclick="hideStickyNotice()">✕</button>
+</div>
+<div class="map-sheet" id="map-sheet" onclick="dismissMapSheet()">
+  <div class="map-sheet-card" onclick="event.stopPropagation()">
+    <div class="map-sheet-grab"></div>
+    <div class="map-sheet-title">Open Navigation With</div>
+    <button class="map-sheet-btn" type="button" onclick="pickMapProvider('apple')">Apple Maps</button>
+    <button class="map-sheet-btn" type="button" onclick="pickMapProvider('google')">Google Maps</button>
+    <button class="map-sheet-btn" type="button" onclick="pickMapProvider('osm')">OpenStreetMap</button>
+    <button class="map-sheet-btn" type="button" onclick="pickMapProvider('cancel')">Cancel</button>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -2216,6 +2571,12 @@ let phoneNotifyEnabled = localStorage.getItem('phone-notify-enabled') === '1';
 let detailDistanceTimer = null;
 let eventMap = null;
 let eventMapMarkers = [];
+let mapSheetResolver = null;
+let adminVerifiedUntil = 0;
+const ADMIN_PASSKEYS_KEY = 'admin-passkeys';
+const ADMIN_SESSION_MS = 10 * 60 * 1000;
+const OWNER_WHATSAPP_NUMBER = '+2347035474827';
+const OFFLINE_NOTICE_TEXT = 'No internet connection. Some features may not work until you are back online.';
 const MAX_ITEMS_PER_EVENT = 200;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024; // 12MB
 const MAX_VIDEO_BYTES = 80 * 1024 * 1024; // 80MB
@@ -2247,12 +2608,18 @@ function initUiSounds() {
     if (!uiSoundEnabled) return;
     const t = e.target;
     if (!(t instanceof Element)) return;
-    if (t.closest('button,.pill,.fab,.nav-btn,.detail-action-btn,.discover-mini-btn,.ops-btn,.community-btn')) playUiTone('tap');
+    if (t.closest('button,.pill,.fab,.nav-btn,.detail-action-btn,.discover-mini-btn,.ops-btn,.community-btn')) {
+      playUiTone('tap');
+      triggerHaptic('tap');
+    }
   }, { passive: true });
   document.addEventListener('change', (e) => {
     if (!uiSoundEnabled) return;
     const t = e.target;
-    if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) playUiTone('select');
+    if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) {
+      playUiTone('select');
+      triggerHaptic('select');
+    }
   }, { passive: true });
   document.addEventListener('keydown', (e) => {
     if (!uiSoundEnabled) return;
@@ -2262,6 +2629,298 @@ function initUiSounds() {
     if (!isTextField) return;
     if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') playUiTone('type');
   });
+}
+
+function triggerHaptic(kind = 'tap') {
+  try {
+    if (!('vibrate' in navigator)) return;
+    if (kind === 'select') navigator.vibrate(12);
+    else navigator.vibrate(8);
+  } catch {}
+}
+
+function initAppFeel() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const adminDrawer = document.getElementById('admin-drawer');
+    if (adminDrawer?.classList.contains('show')) {
+      closeAdminDrawer();
+      return;
+    }
+    const sheet = document.getElementById('map-sheet');
+    if (sheet?.classList.contains('show')) {
+      dismissMapSheet();
+      return;
+    }
+    const active = document.querySelector('.screen.active');
+    if (active && active.id === 'detail') goBack('detail', 'home');
+  });
+}
+
+async function updateSessionMeta() {
+  const el = document.getElementById('session-meta-value');
+  const updatedEl = document.getElementById('session-meta-updated');
+  if (!el) return;
+  const now = new Date();
+  const dateText = now.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  const timeText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  let locationText = 'Location unavailable';
+  try {
+    const pos = await getCurrentPositionOnce();
+    const place = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+    if (place) locationText = place;
+    else locationText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+  } catch (e) {
+    if (String(e?.message || '').toLowerCase().includes('denied')) locationText = 'Location permission denied';
+  }
+  el.textContent = `${dateText} • ${timeText} • ${locationText}`;
+  if (updatedEl) updatedEl.textContent = 'Last updated: just now';
+}
+
+function openAdminDrawer() {
+  const drawer = document.getElementById('admin-drawer');
+  if (!drawer) return;
+  refreshAdminDrawerUI();
+  drawer.classList.add('show');
+}
+
+function closeAdminDrawer() {
+  const drawer = document.getElementById('admin-drawer');
+  if (!drawer) return;
+  drawer.classList.remove('show');
+}
+
+function getStoredAdminPasskeys() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(ADMIN_PASSKEYS_KEY) || '[]');
+    return Array.isArray(rows) ? rows.filter((r) => r && r.id) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredAdminPasskeys(rows) {
+  localStorage.setItem(ADMIN_PASSKEYS_KEY, JSON.stringify(rows || []));
+}
+
+function bufferToBase64Url(buf) {
+  const bytes = new Uint8Array(buf);
+  let str = '';
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function base64UrlToBuffer(str) {
+  const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function randomBytes(len = 32) {
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return arr;
+}
+
+function isAdminUnlocked() {
+  return Date.now() < adminVerifiedUntil;
+}
+
+function refreshAdminDrawerUI() {
+  const lockWrap = document.getElementById('admin-lock-wrap');
+  const actions = document.getElementById('admin-actions');
+  const chip = document.getElementById('admin-lock-chip');
+  const sub = document.getElementById('admin-subtext');
+  if (!lockWrap || !actions || !chip || !sub) return;
+  const unlocked = isAdminUnlocked();
+  lockWrap.classList.toggle('show', !unlocked);
+  actions.classList.toggle('show', unlocked);
+  chip.textContent = unlocked ? 'Unlocked' : 'Locked';
+  chip.style.color = unlocked ? '#a8ffcc' : '#ffd37a';
+  chip.style.background = unlocked ? 'rgba(48,209,88,0.12)' : 'rgba(255,211,122,0.12)';
+  chip.style.borderColor = unlocked ? 'rgba(48,209,88,0.35)' : 'rgba(255,211,122,0.35)';
+  sub.textContent = unlocked ? 'Admin access granted for this session' : 'Verify identity to access admin features';
+}
+
+async function setupOwnerPasskey() {
+  if (!window.PublicKeyCredential || !navigator.credentials?.create || !window.isSecureContext) {
+    showToast('Passkeys require HTTPS and a supported browser.');
+    return;
+  }
+  try {
+    const username = (prompt('Owner label (e.g. Ugoo)') || 'Owner').trim() || 'Owner';
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: randomBytes(32),
+        rp: { name: 'EventCata' },
+        user: {
+          id: randomBytes(16),
+          name: `${username.toLowerCase().replace(/\s+/g, '.')}@eventcata.local`,
+          displayName: username
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+    if (!cred) throw new Error('no credential');
+    const rows = getStoredAdminPasskeys();
+    const id = bufferToBase64Url(cred.rawId);
+    if (!rows.some((r) => r.id === id)) rows.push({ id, label: username, createdAt: Date.now() });
+    saveStoredAdminPasskeys(rows);
+    adminVerifiedUntil = Date.now() + ADMIN_SESSION_MS;
+    refreshAdminDrawerUI();
+    showToast('Owner passkey added');
+  } catch {
+    showToast('Passkey setup cancelled or failed');
+  }
+}
+
+async function unlockAdmin() {
+  if (!window.PublicKeyCredential || !navigator.credentials?.get || !window.isSecureContext) {
+    showToast('Passkeys require HTTPS and a supported browser.');
+    return;
+  }
+  const rows = getStoredAdminPasskeys();
+  if (rows.length === 0) {
+    showToast('No passkey set yet. Tap "Setup Owner Passkey" first.');
+    return;
+  }
+  try {
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: randomBytes(32),
+        allowCredentials: rows.map((r) => ({ type: 'public-key', id: base64UrlToBuffer(r.id) })),
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+    adminVerifiedUntil = Date.now() + ADMIN_SESSION_MS;
+    refreshAdminDrawerUI();
+    showToast('Admin verified');
+  } catch {
+    showToast('Passkey verification failed');
+  }
+}
+
+async function authorizeAdditionalPasskey() {
+  if (!isAdminUnlocked()) {
+    showToast('Unlock admin first');
+    refreshAdminDrawerUI();
+    return;
+  }
+  await setupOwnerPasskey();
+}
+
+function syncOfflineNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  flushOfflineCommunityQueue();
+  showToast('Sync triggered');
+}
+
+function clearDiscoverCacheNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('discover-cache:')) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+    showToast(`Cleared ${keys.length} discover cache entr${keys.length === 1 ? 'y' : 'ies'}`);
+  } catch {
+    showToast('Could not clear discover cache');
+  }
+}
+
+function clearGeoCacheNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  window.__geoCache = new Map();
+  window.__venueGeoCache = new Map();
+  showToast('Geocode cache cleared');
+}
+
+async function clearRuntimeCacheNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  try {
+    clearGeoCacheNow();
+    clearDiscoverCacheNow();
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+    showToast('Runtime cache cleared');
+  } catch {
+    showToast('Could not clear runtime cache');
+  }
+}
+
+async function forceServiceWorkerUpdateNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  if (!('serviceWorker' in navigator)) return showToast('Service worker not supported');
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return showToast('Service worker not registered');
+    await reg.update();
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      showStickyNotice('Applying update. App will refresh...');
+      setTimeout(() => window.location.reload(), 700);
+      return;
+    }
+    showToast('Service worker checked for updates');
+  } catch {
+    showToast('Could not update service worker');
+  }
+}
+
+async function clearAllEventsNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  const ok = confirm('Delete ALL local events on this device? This cannot be undone.');
+  if (!ok) return;
+  try {
+    await Promise.all((allEvents || []).map((ev) => ev?.id ? dbDel(ev.id) : Promise.resolve()));
+    allEvents = await dbAll();
+    renderHome();
+    showToast('All local events deleted');
+  } catch {
+    showToast('Could not clear events');
+  }
+}
+
+async function clearAllLocalDataNow() {
+  if (!isAdminUnlocked()) return showToast('Unlock admin first');
+  const ok = confirm('Reset ALL local app data on this device? This removes events, settings, offline queue, and admin passkeys.');
+  if (!ok) return;
+  try {
+    await Promise.all((allEvents || []).map((ev) => ev?.id ? dbDel(ev.id) : Promise.resolve()));
+    if ('indexedDB' in window) {
+      await new Promise((resolve) => {
+        const req = indexedDB.deleteDatabase(DB_NAME);
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      });
+      db = null;
+      await openDB();
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+    localStorage.clear();
+    adminVerifiedUntil = 0;
+    allEvents = await dbAll();
+    renderHome();
+    refreshAdminDrawerUI();
+    showStickyNotice('Local data reset complete. Refreshing app...');
+    setTimeout(() => window.location.reload(), 900);
+  } catch {
+    showToast('Could not reset all local data');
+  }
 }
 
 function initPhoneNotifications() {
@@ -3121,7 +3780,12 @@ function matchesDateQuery(rawDate, query) {
 // ══════════════════════════════════════════
 openDB().then(async () => {
   allEvents = await dbAll();
+  updateConnectivityNotice();
   initUiSounds();
+  initAppFeel();
+  refreshAdminDrawerUI();
+  updateSessionMeta();
+  setInterval(updateSessionMeta, 60000);
   initPhoneNotifications();
   initSuccessMetricToggle();
   initFirebaseCommunity();
@@ -3205,6 +3869,7 @@ function renderHome(filter, search) {
   }
   refreshCommunityCountsForEvents(allEvents);
   renderMiniDashboard(allEvents);
+  renderTicketDashboard(allEvents);
   if (!window.__distanceBadgeRefreshTimer) {
     window.__distanceBadgeRefreshTimer = setTimeout(() => {
       window.__distanceBadgeRefreshTimer = null;
@@ -3256,6 +3921,33 @@ function renderMiniDashboard(sourceEvents) {
   document.getElementById('insight-active-hosts').textContent = `Active hosts: ${hosts}`;
   document.getElementById('insight-top-event').textContent = `Top trending: ${top?.name || '—'}`;
   document.getElementById('insight-community-total').textContent = `Community posts: ${commTotal}`;
+}
+
+function renderTicketDashboard(sourceEvents) {
+  const card = document.getElementById('ticket-insights-card');
+  if (!card) return;
+  if (!sourceEvents || sourceEvents.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  const rows = sourceEvents.map((ev) => {
+    const orders = Array.isArray(ev.ticketOrders) ? ev.ticketOrders : [];
+    const sold = orders.reduce((s, o) => s + (Number(o.qty) || 0), 0);
+    const buyers = new Set(orders.map((o) => (o.buyerName || '').toLowerCase()).filter(Boolean)).size;
+    const revenue = sold * (Number(ev.ticketPrice) || 0);
+    return { ev, sold, buyers, revenue };
+  });
+  const totalSold = rows.reduce((s, r) => s + r.sold, 0);
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  const totalBuyers = new Set(
+    sourceEvents.flatMap((ev) => (Array.isArray(ev.ticketOrders) ? ev.ticketOrders : []).map((o) => (o.buyerName || '').toLowerCase()).filter(Boolean))
+  ).size;
+  const top = [...rows].sort((a, b) => b.sold - a.sold || b.revenue - a.revenue)[0];
+  card.style.display = 'block';
+  document.getElementById('insight-ticket-sold').textContent = `Tickets sold: ${totalSold}`;
+  document.getElementById('insight-ticket-buyers').textContent = `Registered buyers: ${totalBuyers}`;
+  document.getElementById('insight-ticket-revenue').textContent = `Est. revenue: NGN ${totalRevenue.toLocaleString()}`;
+  document.getElementById('insight-ticket-top-event').textContent = `Top sales event: ${top?.ev?.name || '—'}${top?.sold ? ` (${top.sold})` : ''}`;
 }
 
 async function refreshDistanceBadges(sourceEvents) {
@@ -3734,7 +4426,35 @@ if (discoverKeywordInput) {
     discoverDebounceTimer = setTimeout(() => { discoverEventsNow(); }, 700);
   });
 }
-window.addEventListener('online', () => { flushOfflineCommunityQueue(); });
+function updateConnectivityNotice() {
+  const pillPairs = [
+    ['network-pill', 'network-pill-text'],
+    ['network-pill-detail', 'network-pill-text-detail'],
+    ['network-pill-create', 'network-pill-text-create']
+  ];
+  const setPillState = (isOnline) => {
+    pillPairs.forEach(([pillId, textId]) => {
+      const pill = document.getElementById(pillId);
+      const pillText = document.getElementById(textId);
+      if (!pill || !pillText) return;
+      pill.classList.toggle('offline', !isOnline);
+      pillText.textContent = isOnline ? 'Online' : 'Offline';
+    });
+  };
+  if (navigator.onLine) {
+    setPillState(true);
+    const text = document.getElementById('sticky-notice-text')?.textContent || '';
+    if (text === OFFLINE_NOTICE_TEXT) hideStickyNotice();
+    showToast('Back online');
+    flushOfflineCommunityQueue();
+    return;
+  }
+  setPillState(false);
+  showStickyNotice(OFFLINE_NOTICE_TEXT);
+}
+
+window.addEventListener('online', updateConnectivityNotice);
+window.addEventListener('offline', updateConnectivityNotice);
 
 function escapeAttr(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -3771,6 +4491,7 @@ async function signInWithGoogle() {
   if (!firebaseReady || !firebaseAuth) return showToast('Firebase auth is not ready');
   try {
     await firebaseAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    updateSessionMeta();
     showToast('Signed in with Google');
   } catch {
     showToast('Google sign-in failed');
@@ -4071,6 +4792,8 @@ async function openDetail(id) {
   if (photos.length > 0) metaRows.push({ icon: '#icon-photo', color: '#0A84FF', label: 'Media', value: `${photos.length} item${photos.length !== 1 ? 's' : ''}` });
   if (ev.reminders && ev.reminders.length > 0) metaRows.push({ icon: '#icon-cal', color: '#0A84FF', label: 'Reminders', value: ev.reminders.map(d => `${d}d`).join(', ') });
   if (apertures.length > 0) metaRows.push({ icon: '#icon-cam', color: '#BF5AF2', label: 'Camera', value: [apertures[0], shutters[0], isos[0] ? `ISO ${isos[0]}` : null, focals[0]].filter(Boolean).join(' · ') });
+  const ticketStats = getTicketStats(ev);
+  metaRows.push({ icon: '#icon-photo', color: '#30D158', label: 'Tickets Sold', value: `${ticketStats.sold} ticket(s) · ${ticketStats.buyers} buyer(s)` });
 
   mc.innerHTML = metaRows.map(r => `
     <div class="meta-row">
@@ -4109,6 +4832,19 @@ async function openDetail(id) {
   } else {
     ptitle.style.display = 'none';
     grid.innerHTML = '';
+  }
+
+  const ticketSub = document.getElementById('ticket-subtext');
+  if (ticketSub) {
+    const priceTxt = Number(ev.ticketPrice) > 0 ? `Price: ${formatNaira(ev.ticketPrice)} per ticket.` : 'Price not set. Invoice amount will be marked N/A.';
+    ticketSub.textContent = `${priceTxt} Invoice + WhatsApp notification will be sent on purchase.`;
+  }
+  const buyersList = document.getElementById('ticket-buyers-list');
+  if (buyersList) {
+    const orders = ticketStats.orders.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 8);
+    buyersList.innerHTML = orders.length === 0
+      ? '<div class="ticket-buyer-item">No ticket purchases yet.</div>'
+      : orders.map((o) => `<div class="ticket-buyer-item"><b>${escapeHtml(o.buyerName || 'Buyer')}</b> · ${Number(o.qty) || 0} ticket(s)<br>${escapeHtml(o.buyerPhone || '')}${o.buyerEmail ? ` · ${escapeHtml(o.buyerEmail)}` : ''}</div>`).join('');
   }
 
   document.getElementById('detail-scroll').scrollTop = 0;
@@ -4224,6 +4960,7 @@ async function openEdit() {
   document.getElementById('field-location').value = ev.location || '';
   document.getElementById('field-client').value = ev.client || '';
   document.getElementById('field-host-contact').value = ev.hostContact || '';
+  document.getElementById('field-ticket-price').value = Number(ev.ticketPrice) > 0 ? String(ev.ticketPrice) : '';
   document.getElementById('field-team-members').value = (ev.teamMembers || []).map((m) => `${m.name || ''} | ${m.role || 'Team member'} | ${m.contact || ''}`.trim()).join('\n');
   document.getElementById('field-desc').value = ev.description || '';
   document.getElementById('field-tags').value = (ev.tags || []).join(', ');
@@ -4240,7 +4977,7 @@ async function openEdit() {
 }
 
 function clearForm() {
-  ['field-name','field-date','field-start-time','field-end-time','field-timezone','field-location','field-client','field-host-contact','field-team-members','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
+  ['field-name','field-date','field-start-time','field-end-time','field-timezone','field-location','field-client','field-host-contact','field-ticket-price','field-team-members','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('field-type').value = 'hosted';
   document.getElementById('field-watermark').value = '@EnuguGod';
   setReminderDaysInForm([30, 10]);
@@ -4481,6 +5218,53 @@ function showStickyNotice(message) {
   wrap.classList.add('show');
 }
 
+function formatNaira(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return 'N/A';
+  return `NGN ${n.toLocaleString()}`;
+}
+
+function getTicketStats(ev) {
+  const orders = Array.isArray(ev?.ticketOrders) ? ev.ticketOrders : [];
+  const sold = orders.reduce((s, o) => s + (Number(o.qty) || 0), 0);
+  const buyers = new Set(orders.map((o) => (o.buyerName || '').toLowerCase()).filter(Boolean)).size;
+  return { orders, sold, buyers };
+}
+
+function sanitizePhoneNumber(raw) {
+  return String(raw || '').replace(/[^\d]/g, '');
+}
+
+function buildTicketInvoiceText(ev, order) {
+  return [
+    `EventCata Ticket Invoice`,
+    `Invoice No: ${order.invoiceNo}`,
+    `Date: ${new Date(order.createdAt).toLocaleString()}`,
+    `Event: ${ev.name || 'Event'}`,
+    `Event Date: ${ev.date || 'N/A'}`,
+    `Venue: ${ev.location || 'N/A'}`,
+    `Buyer: ${order.buyerName}`,
+    `Phone: ${order.buyerPhone}`,
+    `Email: ${order.buyerEmail || 'N/A'}`,
+    `Quantity: ${order.qty}`,
+    `Unit Price: ${formatNaira(ev.ticketPrice)}`,
+    `Total: ${formatNaira((Number(ev.ticketPrice) || 0) * (Number(order.qty) || 0))}`
+  ].join('\n');
+}
+
+function downloadInvoiceTextFile(ev, order) {
+  const content = buildTicketInvoiceText(ev, order);
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `invoice-${order.invoiceNo}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function hideStickyNotice() {
   const wrap = document.getElementById('sticky-notice');
   const text = document.getElementById('sticky-notice-text');
@@ -4502,6 +5286,7 @@ async function saveEvent() {
 
   const selectedWatermark = getSelectedWatermarkLabel();
   const photos = pickedFiles.map(p => ({ dataUrl: p.dataUrl, exif: p.exif || {}, mediaType: p.mediaType || 'image/*', watermarkLabel: p.watermarkLabel || selectedWatermark }));
+  const previous = editMode ? await dbGet(currentEventId) : null;
 
   const ev = {
     id: editMode ? currentEventId : ('ev_' + Date.now()),
@@ -4513,6 +5298,7 @@ async function saveEvent() {
     location,
     client: document.getElementById('field-client').value.trim(),
     hostContact: document.getElementById('field-host-contact').value.trim(),
+    ticketPrice: Math.max(0, Number(document.getElementById('field-ticket-price').value || 0)),
     teamMembers: (document.getElementById('field-team-members').value || '')
       .split('\n')
       .map((line) => line.trim())
@@ -4527,6 +5313,7 @@ async function saveEvent() {
     reminders,
     tags,
     photos,
+    ticketOrders: Array.isArray(previous?.ticketOrders) ? previous.ticketOrders : [],
     updatedAt: Date.now()
   };
 
@@ -4586,6 +5373,61 @@ async function getCurrentEvent() {
   return dbGet(currentEventId);
 }
 
+async function buyTicketsForCurrentEvent() {
+  const ev = await getCurrentEvent();
+  if (!ev) return;
+  const buyerName = (document.getElementById('ticket-buyer-name')?.value || '').trim();
+  const buyerPhone = (document.getElementById('ticket-buyer-phone')?.value || '').trim();
+  const buyerEmail = (document.getElementById('ticket-buyer-email')?.value || '').trim();
+  const qty = Math.max(1, Number(document.getElementById('ticket-qty')?.value || 1));
+  if (!buyerName || !buyerPhone) {
+    showStickyNotice('Buyer name and phone are required for ticket purchase.');
+    return;
+  }
+  const order = {
+    id: `tk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    invoiceNo: `EC-${Date.now().toString().slice(-8)}`,
+    buyerName,
+    buyerPhone,
+    buyerEmail,
+    qty,
+    createdAt: Date.now()
+  };
+  ev.ticketOrders = Array.isArray(ev.ticketOrders) ? ev.ticketOrders : [];
+  ev.ticketOrders.push(order);
+  ev.updatedAt = Date.now();
+  await dbPut(ev);
+  allEvents = await dbAll();
+
+  const total = (Number(ev.ticketPrice) || 0) * qty;
+  const waNumber = sanitizePhoneNumber(OWNER_WHATSAPP_NUMBER);
+  const waText = [
+    `New Ticket Order`,
+    `Invoice: ${order.invoiceNo}`,
+    `Event: ${ev.name || 'Event'}`,
+    `Buyer: ${buyerName}`,
+    `Phone: ${buyerPhone}`,
+    buyerEmail ? `Email: ${buyerEmail}` : null,
+    `Quantity: ${qty}`,
+    `Unit Price: ${formatNaira(ev.ticketPrice)}`,
+    `Total: ${formatNaira(total)}`,
+    `Date: ${new Date(order.createdAt).toLocaleString()}`
+  ].filter(Boolean).join('\n');
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`, '_blank', 'noopener');
+  downloadInvoiceTextFile(ev, order);
+
+  ['ticket-buyer-name', 'ticket-buyer-phone', 'ticket-buyer-email'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const qtyEl = document.getElementById('ticket-qty');
+  if (qtyEl) qtyEl.value = '1';
+  hideStickyNotice();
+  showToast('Invoice generated and WhatsApp chat opened');
+  trackEvent('ticket_purchase_created', { qty, has_price: Number(ev.ticketPrice) > 0 ? 1 : 0 });
+  await openDetail(ev.id);
+}
+
 function extractPhoneCandidatesFromEvent(ev) {
   const parts = [];
   if (ev?.hostContact) parts.push(ev.hostContact);
@@ -4638,6 +5480,35 @@ async function sendSmsReminderForCurrentEvent() {
   }
 }
 
+function showMapSheet(defaultProvider = 'google') {
+  const sheet = document.getElementById('map-sheet');
+  if (!sheet) return Promise.resolve(defaultProvider);
+  sheet.classList.add('show');
+  return new Promise((resolve) => {
+    mapSheetResolver = resolve;
+  });
+}
+
+function dismissMapSheet() {
+  const sheet = document.getElementById('map-sheet');
+  if (sheet) sheet.classList.remove('show');
+  if (mapSheetResolver) {
+    const resolve = mapSheetResolver;
+    mapSheetResolver = null;
+    resolve('cancel');
+  }
+}
+
+function pickMapProvider(provider) {
+  const sheet = document.getElementById('map-sheet');
+  if (sheet) sheet.classList.remove('show');
+  if (mapSheetResolver) {
+    const resolve = mapSheetResolver;
+    mapSheetResolver = null;
+    resolve(provider);
+  }
+}
+
 async function openMapForCurrentEvent() {
   const ev = await getCurrentEvent();
   if (!ev?.location) {
@@ -4655,8 +5526,8 @@ async function openMapForCurrentEvent() {
     googleUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodedDest}&travelmode=driving`;
     appleUrl = `maps://?saddr=${origin}&daddr=${encodedDest}&dirflg=d`;
   } catch {}
-  const choice = prompt('Open map with: apple / google / osm', isIosDevice ? 'apple' : 'google');
-  const pick = String(choice || '').trim().toLowerCase();
+  const pick = await showMapSheet(isIosDevice ? 'apple' : 'google');
+  if (pick === 'cancel') return;
   if (pick === 'osm') return window.open(osmSearch, '_blank', 'noopener');
   if (pick === 'apple' || (isIosDevice && pick !== 'google')) return window.location.href = appleUrl;
   window.open(googleUrl, '_blank', 'noopener');
@@ -4832,6 +5703,7 @@ function navigate(toId) {
 }
 
 function goBack(fromId, toId) {
+  closeAdminDrawer();
   if (fromId === 'detail' && communityUnsubscribe) {
     communityUnsubscribe();
     communityUnsubscribe = null;
