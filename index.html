@@ -1017,11 +1017,11 @@ textarea.form-input {
     <div class="discover-wrap">
       <div class="discover-title">Discover Trending Events Near You</div>
       <div class="discover-row">
-        <input id="discover-location" class="discover-input" type="text" placeholder="Your location (city)">
+        <input id="discover-location" class="discover-input" type="text" placeholder="Location keywords (state, city, town)">
         <button class="discover-btn" type="button" onclick="discoverEventsNow()">Find</button>
       </div>
       <div class="discover-row">
-        <input id="discover-keywords" class="discover-input" type="text" placeholder="Optional interests (e.g. music, tech, art)">
+        <input id="discover-keywords" class="discover-input" type="text" placeholder="Keywords (e.g. shows, comedy night, hangout, festivals)">
       </div>
       <div class="discover-item-meta">On-demand pull from public web/blog + social trend signals, then ranked by your event interests.</div>
       <div class="discover-links" id="discover-social-links"></div>
@@ -1135,6 +1135,14 @@ textarea.form-input {
           <label class="reminder-pill"><input type="checkbox" id="rem-10" checked>10 days</label>
           <label class="reminder-pill"><input type="checkbox" id="rem-3">3 days</label>
           <label class="reminder-pill"><input type="checkbox" id="rem-1">1 day</label>
+        </div>
+      </div>
+      <div class="form-field" style="margin-top:8px;">
+        <div class="reminder-row" style="padding:12px 14px;">
+          <label class="reminder-pill">
+            <input type="checkbox" id="strict-video-480-toggle">
+            Strict mode: require videos above 480p to be reduced before adding
+          </label>
         </div>
       </div>
       <div class="form-field" style="margin-top:8px;">
@@ -1395,6 +1403,8 @@ const MAX_TOTAL_BYTES_PER_EVENT = 350 * 1024 * 1024; // 350MB
 const IMAGE_RECOMPRESS_TRIGGER_BYTES = 4 * 1024 * 1024; // 4MB
 const IMAGE_MAX_DIMENSION = 2400;
 const IMAGE_COMPRESSION_QUALITY = 0.82;
+const VIDEO_MAX_HEIGHT = 480;
+const VIDEO_TARGET_BITRATE = 1200000;
 
 function trackEvent(name, params = {}) {
   if (typeof window.gtag !== 'function') return;
@@ -1440,6 +1450,21 @@ function isCalendarPromptEnabled() {
   const el = document.getElementById('calendar-sync-prompt-toggle');
   if (!el) return true;
   return el.checked;
+}
+
+function initVideoStrictPreference() {
+  const el = document.getElementById('strict-video-480-toggle');
+  if (!el) return;
+  const stored = localStorage.getItem('strict-video-480-enabled');
+  el.checked = stored === '1';
+  el.addEventListener('change', () => {
+    localStorage.setItem('strict-video-480-enabled', el.checked ? '1' : '0');
+  });
+}
+
+function isVideoStrictModeEnabled() {
+  const el = document.getElementById('strict-video-480-toggle');
+  return !!el && el.checked;
 }
 
 function toLocalIsoDate(date) {
@@ -1621,6 +1646,101 @@ async function maybeCompressImageFile(file) {
   }
 }
 
+async function maybeNormalizeVideoFile(file) {
+  if (!(file.type || '').startsWith('video/')) return file;
+  try {
+    const inUrl = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = inUrl;
+
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error('video metadata load failed'));
+    });
+
+    // Keep original if already at/below 480p.
+    if ((video.videoHeight || 0) <= VIDEO_MAX_HEIGHT) {
+      URL.revokeObjectURL(inUrl);
+      return file;
+    }
+
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+      URL.revokeObjectURL(inUrl);
+      return file;
+    }
+
+    const mimeCandidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    const supportedMime = mimeCandidates.find((m) => MediaRecorder.isTypeSupported(m));
+    if (!supportedMime) {
+      URL.revokeObjectURL(inUrl);
+      return file;
+    }
+
+    const scale = VIDEO_MAX_HEIGHT / video.videoHeight;
+    const outW = Math.max(2, Math.round(video.videoWidth * scale));
+    const outH = Math.max(2, Math.round(video.videoHeight * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      URL.revokeObjectURL(inUrl);
+      return file;
+    }
+
+    const stream = canvas.captureStream(24);
+    const chunks = [];
+    const recorder = new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: VIDEO_TARGET_BITRATE });
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+
+    const drawFrame = () => {
+      if (video.paused || video.ended) return;
+      ctx.drawImage(video, 0, 0, outW, outH);
+      requestAnimationFrame(drawFrame);
+    };
+
+    const recDone = new Promise((resolve) => {
+      recorder.onstop = () => resolve();
+    });
+
+    recorder.start();
+    await video.play();
+    drawFrame();
+    await new Promise((resolve) => { video.onended = () => resolve(); });
+    recorder.stop();
+    await recDone;
+
+    URL.revokeObjectURL(inUrl);
+    const blob = new Blob(chunks, { type: supportedMime });
+    if (!blob.size || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, '.webm'), { type: supportedMime, lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+}
+
+async function getVideoHeight(file) {
+  if (!(file.type || '').startsWith('video/')) return 0;
+  try {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = url;
+    const h = await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => resolve(video.videoHeight || 0);
+      video.onerror = () => reject(new Error('video metadata load failed'));
+    });
+    URL.revokeObjectURL(url);
+    return Number(h) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 function updateMediaLimitsUI() {
   const note = document.getElementById('media-limit-note');
   const usage = document.getElementById('media-usage');
@@ -1630,7 +1750,7 @@ function updateMediaLimitsUI() {
   const ratio = Math.max(countRatio, sizeRatio);
 
   note.textContent = `Limits: up to ${MAX_ITEMS_PER_EVENT} items · images <= ${formatBytes(MAX_IMAGE_BYTES)} · videos <= ${formatBytes(MAX_VIDEO_BYTES)} · total <= ${formatBytes(MAX_TOTAL_BYTES_PER_EVENT)}.`;
-  note.textContent += ' Large images are auto-optimized; videos are not transcoded on-device.';
+  note.textContent += ' Large images are auto-optimized; high-res videos are best-effort reduced to about 480p.';
   usage.textContent = `Current: ${pickedFiles.length}/${MAX_ITEMS_PER_EVENT} items · ${formatBytes(totalBytes)} / ${formatBytes(MAX_TOTAL_BYTES_PER_EVENT)}.`;
   usage.classList.remove('warn', 'danger');
   if (ratio >= 0.95) usage.classList.add('danger');
@@ -1763,6 +1883,7 @@ openDB().then(async () => {
   renderHome();
   updateMediaLimitsUI();
   initCalendarPromptPreference();
+  initVideoStrictPreference();
   initInstallHelper();
   checkDueReminders();
   trackEvent('app_loaded', { existing_events: allEvents.length });
@@ -1919,24 +2040,53 @@ function scoreDiscoveryItem(item, interests) {
 
 let discoveredResults = [];
 
+function tokenizeKeywords(input) {
+  return (input || '')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function buildDiscoverQuery(locationInput, keywordInput) {
+  const locationTokens = tokenizeKeywords(locationInput);
+  const userTokens = tokenizeKeywords(keywordInput);
+  const defaultEventTerms = [
+    'event', 'events', 'upcoming event', 'upcoming events', 'happening', 'happenings',
+    'show', 'shows', 'gig', 'gigs', 'concert', 'concerts', 'live music', 'live show',
+    'comedy', 'comedy night', 'standup', 'stand-up',
+    'hangout', 'social', 'socials', 'networking', 'meetup', 'meetups',
+    'festival', 'festivals', 'fair', 'fairs', 'carnival',
+    'party', 'parties', 'nightlife', 'club night',
+    'workshop', 'workshops', 'seminar', 'seminars', 'conference', 'conferences', 'summit',
+    'expo', 'exhibition', 'exhibitions', 'trade show',
+    'launch', 'premiere', 'screening', 'open mic',
+    'community event', 'cultural event', 'sports event', 'match day'
+  ];
+  const allTokens = [...new Set([...locationTokens, ...userTokens, ...defaultEventTerms])];
+  const text = allTokens.join(' ');
+  const encoded = encodeURIComponent(text);
+  return { text, encoded, locationText: locationTokens.join(' '), terms: allTokens };
+}
+
 function renderSocialPlatformLinks(location, keywords) {
   const host = document.getElementById('discover-social-links');
   if (!host) return;
-  const q = encodeURIComponent(`${location} ${keywords || ''} upcoming events`);
+  const built = buildDiscoverQuery(location, keywords);
+  const q = built.encoded;
   const links = [
-    ['Facebook', `https://www.facebook.com/search/events/?q=${q}`],
-    ['X/Twitter', `https://x.com/search?q=${q}&f=live`],
-    ['TikTok', `https://www.tiktok.com/search?q=${q}`],
-    ['Threads', `https://www.threads.net/search?q=${q}`],
-    ['Instagram', `https://www.instagram.com/explore/search/keyword/?q=${q}`],
-    ['YouTube', `https://www.youtube.com/results?search_query=${q}`],
-    ['Reddit', `https://www.reddit.com/search/?q=${q}&sort=top&t=week`],
-    ['Eventbrite', `https://www.eventbrite.com/d/online/${encodeURIComponent(location)}--events/`],
-    ['Meetup', `https://www.meetup.com/find/?keywords=${q}`],
-    ['Google', `https://www.google.com/search?q=${q}`]
+    ['facebook', 'Facebook', `https://www.facebook.com/search/events/?q=${q}`],
+    ['x', 'X/Twitter', `https://x.com/search?q=${q}&f=live`],
+    ['tiktok', 'TikTok', `https://www.tiktok.com/search?q=${q}`],
+    ['threads', 'Threads', `https://www.threads.net/search?q=${q}`],
+    ['instagram', 'Instagram', `https://www.instagram.com/explore/search/keyword/?q=${q}`],
+    ['youtube', 'YouTube', `https://www.youtube.com/results?search_query=${q}`],
+    ['reddit', 'Reddit', `https://www.reddit.com/search/?q=${q}&sort=top&t=week`],
+    ['eventbrite', 'Eventbrite', `https://www.eventbrite.com/d/online/${encodeURIComponent(location)}--events/`],
+    ['meetup', 'Meetup', `https://www.meetup.com/find/?keywords=${q}`],
+    ['google', 'Google', `https://www.google.com/search?q=${q}`]
   ];
-  host.innerHTML = links.map(([label, url]) =>
-    `<a class="discover-link" href="${url}" target="_blank" rel="noopener">${label}</a>`
+  host.innerHTML = links.map(([platform, label, url]) =>
+    `<a class="discover-link" href="${url}" target="_blank" rel="noopener" onclick="event.preventDefault(); openSocialSearch('${platform}')">${label}</a>`
   ).join('');
 }
 
@@ -1958,6 +2108,32 @@ function saveDiscoveredAsInterested(idx) {
   trackEvent('discover_saved_as_interested');
 }
 
+function openSocialSearch(platform) {
+  const location = (document.getElementById('discover-location')?.value || '').trim();
+  const keywords = (document.getElementById('discover-keywords')?.value || '').trim();
+  if (!location) {
+    showToast('Enter location first');
+    return;
+  }
+  const built = buildDiscoverQuery(location, keywords);
+  const q = built.encoded;
+  const loc = encodeURIComponent(built.locationText || location);
+  const urls = {
+    facebook: `https://www.facebook.com/search/events/?q=${q}`,
+    x: `https://x.com/search?q=${q}&f=live`,
+    tiktok: `https://www.tiktok.com/search?q=${q}`,
+    threads: `https://www.threads.net/search?q=${q}`,
+    instagram: `https://www.instagram.com/explore/search/keyword/?q=${q}`,
+    youtube: `https://www.youtube.com/results?search_query=${q}`,
+    reddit: `https://www.reddit.com/search/?q=${q}&sort=top&t=week`,
+    eventbrite: `https://www.eventbrite.com/d/online/${loc || encodeURIComponent(location)}--events/`,
+    meetup: `https://www.meetup.com/find/?keywords=${q}`,
+    google: `https://www.google.com/search?q=${q}`
+  };
+  const url = urls[platform] || urls.google;
+  window.open(url, '_blank', 'noopener');
+}
+
 async function discoverEventsNow() {
   const location = (document.getElementById('discover-location')?.value || '').trim();
   const keywords = (document.getElementById('discover-keywords')?.value || '').trim();
@@ -1970,7 +2146,8 @@ async function discoverEventsNow() {
 
   const interests = getInterestKeywords();
   renderSocialPlatformLinks(location, keywords);
-  const query = encodeURIComponent(`${location} upcoming events OR concerts OR festivals`);
+  const built = buildDiscoverQuery(location, keywords);
+  const query = built.encoded;
   const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}`);
 
   const [newsRes, redditRes] = await Promise.allSettled([
@@ -2329,9 +2506,12 @@ async function processPickedFiles(files) {
   let totalBytes = pickedFiles.reduce((sum, p) => sum + (p.file?.size || 0), 0);
   let added = 0;
   let convertedImages = 0;
+  let convertedVideos = 0;
+  let skippedStrict = 0;
   let skippedLarge = 0;
   let skippedDup = 0;
   let skippedLimit = 0;
+  const strictVideoMode = isVideoStrictModeEnabled();
 
   showToast(`Reading ${mediaFiles.length} media item${mediaFiles.length !== 1 ? 's' : ''}...`);
   trackEvent('media_import_started', { attempted_items: mediaFiles.length });
@@ -2340,8 +2520,15 @@ async function processPickedFiles(files) {
     const originalFile = mediaFiles[i];
     const isVideo = (originalFile.type || '').startsWith('video/');
     const maxSize = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-    const file = isVideo ? originalFile : await maybeCompressImageFile(originalFile);
-    if (file !== originalFile) convertedImages++;
+    const originalVideoHeight = isVideo ? await getVideoHeight(originalFile) : 0;
+    const file = isVideo ? await maybeNormalizeVideoFile(originalFile) : await maybeCompressImageFile(originalFile);
+    if (!isVideo && file !== originalFile) convertedImages++;
+    if (isVideo && file !== originalFile) convertedVideos++;
+    if (isVideo && strictVideoMode && originalVideoHeight > VIDEO_MAX_HEIGHT && file === originalFile) {
+      skippedStrict++;
+      setImportProgress(i + 1, mediaFiles.length);
+      continue;
+    }
 
     if (pickedFiles.length >= MAX_ITEMS_PER_EVENT) { skippedLimit++; setImportProgress(i + 1, mediaFiles.length); continue; }
     if (file.size > maxSize) { skippedLarge++; setImportProgress(i + 1, mediaFiles.length); continue; }
@@ -2373,6 +2560,8 @@ async function processPickedFiles(files) {
   if (added === 0) msg = 'No new media added';
   if (skippedDup > 0) msg += ` · ${skippedDup} duplicate${skippedDup !== 1 ? 's' : ''} skipped`;
   if (convertedImages > 0) msg += ` · ${convertedImages} image${convertedImages !== 1 ? 's' : ''} optimized`;
+  if (convertedVideos > 0) msg += ` · ${convertedVideos} video${convertedVideos !== 1 ? 's' : ''} reduced`;
+  if (skippedStrict > 0) msg += ` · ${skippedStrict} skipped by strict 480p mode`;
   if (skippedLarge > 0) msg += ` · ${skippedLarge} too large`;
   if (skippedLimit > 0) msg += ` · ${skippedLimit} over event limit`;
   showToast(msg);
@@ -2381,6 +2570,8 @@ async function processPickedFiles(files) {
     added_items: added,
     skipped_duplicates: skippedDup,
     optimized_images: convertedImages,
+    reduced_videos: convertedVideos,
+    skipped_strict_mode: skippedStrict,
     skipped_too_large: skippedLarge,
     skipped_over_limit: skippedLimit,
     total_selected_items: pickedFiles.length
