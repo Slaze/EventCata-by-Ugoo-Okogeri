@@ -580,6 +580,11 @@ textarea.form-input {
   font-size: 13px;
   color: var(--text2);
 }
+.promo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
 
 /* Photo picker */
 .photo-picker-area {
@@ -727,6 +732,51 @@ textarea.form-input {
 }
 .stat-num { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+/* ─── SUCCESS CHART ─── */
+.success-wrap {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  display: none;
+}
+.success-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.success-subtitle { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.success-toggle {
+  width: 100%;
+  margin: 0 0 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.success-row { margin-bottom: 8px; }
+.success-row:last-child { margin-bottom: 0; }
+.success-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.success-row-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.success-row-score { color: var(--text2); flex-shrink: 0; }
+.success-bar {
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.success-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #30d158, #0a84ff);
+}
 
 /* ─── UPCOMING SLIDER ─── */
 .upcoming-wrap {
@@ -961,6 +1011,86 @@ textarea.form-input {
 .detail-action-btn svg { width: 16px; height: 16px; }
 .detail-action-btn.red { color: var(--accent-red); }
 
+/* ─── COMMUNITY ─── */
+.community-wrap {
+  margin: 0 20px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+}
+.community-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.community-auth { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.community-auth-actions { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.community-btn {
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.community-input, .community-file {
+  width: 100%;
+  margin: 0 0 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+  font-family: var(--font);
+}
+.community-list { display: grid; gap: 8px; margin-top: 8px; }
+.community-item {
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 10px;
+}
+.community-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+.community-item-kind {
+  font-size: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 6px;
+}
+.community-item-delete {
+  border: 1px solid rgba(255,69,58,0.35);
+  color: #ff8d85;
+  background: rgba(255,69,58,0.1);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+.community-item-text { font-size: 13px; line-height: 1.4; }
+.community-media {
+  margin-top: 8px;
+  width: 100%;
+  max-height: 240px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.community-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #9cc6ff;
+  border: 1px solid rgba(10,132,255,0.35);
+  background: rgba(10,132,255,0.12);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 </style>
 </head>
 <body>
@@ -996,6 +1126,18 @@ textarea.form-input {
       <div class="stat-card"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Media</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-years">0</div><div class="stat-label">Years</div></div>
+    </div>
+
+    <div class="success-wrap" id="success-chart-wrap">
+      <div class="success-title">Event Success Snapshot</div>
+      <div class="success-subtitle">Composite score from engagement, trend status, media depth, and recency</div>
+      <select id="success-metric-toggle" class="success-toggle" onchange="onSuccessMetricChange()">
+        <option value="balanced">Balanced</option>
+        <option value="engagement">Engagement Focus</option>
+        <option value="reach">Reach Focus (views + shares)</option>
+        <option value="momentum">Momentum Focus (upcoming + trend)</option>
+      </select>
+      <div id="success-chart-list"></div>
     </div>
 
     <div class="upcoming-wrap" id="upcoming-slider-wrap">
@@ -1056,6 +1198,21 @@ textarea.form-input {
       <div class="meta-card" id="detail-meta-card"></div>
       <div class="section-title" id="detail-photos-title" style="display:none">Media</div>
       <div class="photo-grid" id="detail-photo-grid"></div>
+      <div class="community-wrap">
+        <div class="community-title">Community Chat & Contributions</div>
+        <div class="community-auth" id="community-auth-state">Checking sign-in...</div>
+        <div class="community-auth-actions">
+          <button class="community-btn" id="btn-google-login" type="button" onclick="signInWithGoogle()">Continue with Google</button>
+          <button class="community-btn" id="btn-logout" type="button" onclick="signOutCommunity()" style="display:none">Sign out</button>
+        </div>
+        <input class="community-input" id="community-chat-input" type="text" placeholder="Post to event chat...">
+        <button class="community-btn" type="button" onclick="sendCommunityMessage('chat')">Send chat</button>
+        <input class="community-input" id="community-comment-input" type="text" placeholder="Add a comment about this event...">
+        <button class="community-btn" type="button" onclick="sendCommunityMessage('comment')">Add comment</button>
+        <input class="community-file" id="community-media-input" type="file" accept="image/*,video/*">
+        <button class="community-btn" type="button" onclick="uploadCommunityMedia()">Upload media</button>
+        <div class="community-list" id="community-list"></div>
+      </div>
     </div>
     <div class="detail-actions">
       <button class="detail-action-btn" onclick="shareEvent()">
@@ -1064,6 +1221,7 @@ textarea.form-input {
       </button>
       <button class="detail-action-btn" onclick="addToGoogleCalendar()">Google</button>
       <button class="detail-action-btn" onclick="downloadIcsForCurrentEvent()">.ics</button>
+      <button class="detail-action-btn" onclick="downloadEventPdfForCurrentEvent()">PDF</button>
       <button class="detail-action-btn red" onclick="deleteCurrentEvent()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
         Delete
@@ -1156,6 +1314,19 @@ textarea.form-input {
     </div>
 
     <div class="form-section">
+      <div class="form-label">Promotion Intelligence</div>
+      <div class="form-field">
+        <textarea class="form-input" id="field-promo-links" placeholder="Promotion links (one per line): https://..."></textarea>
+      </div>
+      <div class="promo-grid" style="margin-top:8px;">
+        <div class="form-field"><input class="form-input" id="field-promo-likes" type="number" min="0" placeholder="Likes"></div>
+        <div class="form-field"><input class="form-input" id="field-promo-comments" type="number" min="0" placeholder="Comments"></div>
+        <div class="form-field"><input class="form-input" id="field-promo-shares" type="number" min="0" placeholder="Shares/Reposts"></div>
+        <div class="form-field"><input class="form-input" id="field-promo-views" type="number" min="0" placeholder="Views"></div>
+      </div>
+    </div>
+
+    <div class="form-section">
       <div class="form-label">Media</div>
       <div class="photo-picker-area" id="photo-picker-area" onclick="document.getElementById('photo-input').click()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -1196,6 +1367,11 @@ textarea.form-input {
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
 <script>
 // ══════════════════════════════════════════
@@ -1396,6 +1572,16 @@ let pickedFiles = []; // {file, dataUrl, exif, mediaType}
 let lbPhotos = [], lbIndex = 0;
 let activeFilter = 'all';
 let deferredInstallPrompt = null;
+let successMetricMode = localStorage.getItem('success-metric-mode') || 'balanced';
+let firebaseReady = false;
+let firebaseAuth = null;
+let firestoreDb = null;
+let firebaseStorage = null;
+let communityUser = null;
+let communityUnsubscribe = null;
+let communityCountsByEvent = {};
+let communityCountsLoading = false;
+const COMMUNITY_ADMIN_EMAILS = []; // optional: add admin emails that can delete any post
 const MAX_ITEMS_PER_EVENT = 200;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024; // 12MB
 const MAX_VIDEO_BYTES = 80 * 1024 * 1024; // 80MB
@@ -1409,6 +1595,55 @@ const VIDEO_TARGET_BITRATE = 1200000;
 function trackEvent(name, params = {}) {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
+}
+
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyDs3s8bXMNlxgt8LkSXysXgmCaaZqzdeF0',
+  authDomain: 'eventcata-56379.firebaseapp.com',
+  projectId: 'eventcata-56379',
+  storageBucket: 'eventcata-56379.firebasestorage.app',
+  messagingSenderId: '57155862354',
+  appId: '1:57155862354:web:47f075e6584e6fe64b848b'
+};
+
+function isFirebaseConfigured() {
+  return !!FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'REPLACE_ME' && !!FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.projectId !== 'REPLACE_ME';
+}
+
+function initFirebaseCommunity() {
+  if (!window.firebase || !isFirebaseConfigured()) {
+    updateCommunityAuthUI();
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseAuth = firebase.auth();
+    firestoreDb = firebase.firestore();
+    firebaseStorage = firebase.storage();
+    firebaseReady = true;
+    firebaseAuth.onAuthStateChanged((user) => {
+      communityUser = user || null;
+      updateCommunityAuthUI();
+      subscribeCommunityForCurrentEvent();
+    });
+  } catch {
+    firebaseReady = false;
+  }
+  updateCommunityAuthUI();
+}
+
+function initSuccessMetricToggle() {
+  const el = document.getElementById('success-metric-toggle');
+  if (!el) return;
+  el.value = successMetricMode;
+}
+
+function onSuccessMetricChange() {
+  const el = document.getElementById('success-metric-toggle');
+  if (!el) return;
+  successMetricMode = el.value || 'balanced';
+  localStorage.setItem('success-metric-mode', successMetricMode);
+  renderSuccessChart(allEvents);
 }
 
 function formatBytes(bytes) {
@@ -1525,6 +1760,86 @@ function buildIcs(eventObj) {
     'END:VEVENT',
     'END:VCALENDAR'
   ].join('\r\n');
+}
+
+function toNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function computeTrendInsight(ev) {
+  const p = ev.promo || {};
+  const likes = toNum(p.likes);
+  const comments = toNum(p.comments);
+  const shares = toNum(p.shares);
+  const views = toNum(p.views);
+  const weighted = likes + comments * 2 + shares * 3;
+  const engagementRate = views > 0 ? (weighted / views) : 0;
+  const daysTo = getDaysToEvent(ev.date);
+
+  let status = 'Low traction';
+  if (daysTo !== null && daysTo < 0) {
+    status = weighted > 200 ? 'Trended' : 'Past event';
+  } else if (weighted > 900 || engagementRate > 0.12) {
+    status = 'Trending';
+  } else if (weighted > 250 || engagementRate > 0.05) {
+    status = 'Likely to trend';
+  }
+
+  return {
+    status,
+    weighted,
+    engagementRate: Math.round(engagementRate * 1000) / 10
+  };
+}
+
+function computeEventSuccessScore(ev) {
+  const trend = computeTrendInsight(ev);
+  const promo = ev.promo || {};
+  const likes = toNum(promo.likes);
+  const comments = toNum(promo.comments);
+  const shares = toNum(promo.shares);
+  const views = toNum(promo.views);
+  const mediaCount = (ev.photos || []).length;
+  const daysTo = getDaysToEvent(ev.date);
+
+  let score = 0;
+  if (successMetricMode === 'engagement') {
+    score += Math.min(60, likes / 14 + comments / 6 + shares / 4);
+    score += Math.min(25, trend.engagementRate / 1.4);
+    score += Math.min(8, mediaCount);
+  } else if (successMetricMode === 'reach') {
+    score += Math.min(45, views / 300);
+    score += Math.min(25, shares / 3);
+    score += Math.min(15, likes / 20 + comments / 10);
+    score += Math.min(8, mediaCount * 1.1);
+  } else if (successMetricMode === 'momentum') {
+    score += Math.min(28, trend.engagementRate / 1.5);
+    if (daysTo !== null) {
+      if (daysTo >= 0 && daysTo <= 14) score += 36;
+      else if (daysTo > 14 && daysTo <= 60) score += 24;
+      else if (daysTo > 60) score += 14;
+      else score += 6;
+    }
+    if (trend.status === 'Trending') score += 22;
+    else if (trend.status === 'Likely to trend') score += 16;
+    else if (trend.status === 'Trended') score += 12;
+    score += Math.min(10, shares / 5);
+  } else {
+    score += Math.min(50, likes / 20 + comments / 8 + shares / 5);
+    score += Math.min(20, trend.engagementRate / 2);
+    score += Math.min(10, mediaCount * 1.2);
+    if (daysTo !== null) {
+      if (daysTo >= 0 && daysTo <= 21) score += 12;
+      else if (daysTo > 21) score += 6;
+      else score += 4;
+    }
+    if (trend.status === 'Trending') score += 10;
+    else if (trend.status === 'Likely to trend') score += 6;
+    else if (trend.status === 'Trended') score += 8;
+  }
+
+  return Math.round(Math.max(0, Math.min(100, score)));
 }
 
 let tesseractLoader = null;
@@ -1880,6 +2195,8 @@ function matchesDateQuery(rawDate, query) {
 // ══════════════════════════════════════════
 openDB().then(async () => {
   allEvents = await dbAll();
+  initSuccessMetricToggle();
+  initFirebaseCommunity();
   renderHome();
   updateMediaLimitsUI();
   initCalendarPromptPreference();
@@ -1895,6 +2212,7 @@ openDB().then(async () => {
 function renderHome(filter, search) {
   const list = document.getElementById('events-list');
   const statsBar = document.getElementById('stats-bar');
+  const successWrap = document.getElementById('success-chart-wrap');
   const subtitle = document.getElementById('home-subtitle');
 
   let events = [...allEvents].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -1917,11 +2235,13 @@ function renderHome(filter, search) {
 
   renderUpcomingSlider(allEvents);
   renderHostTracker(allEvents);
+  renderSuccessChart(allEvents);
 
   subtitle.textContent = `${allEvents.length} event${allEvents.length !== 1 ? 's' : ''}`;
 
   if (allEvents.length > 0) {
     statsBar.style.display = 'flex';
+    successWrap.style.display = 'block';
     document.getElementById('stat-events').textContent = allEvents.length;
     const totalPhotos = allEvents.reduce((s, e) => s + (e.photos || []).length, 0);
     document.getElementById('stat-photos').textContent = totalPhotos;
@@ -1929,7 +2249,9 @@ function renderHome(filter, search) {
     document.getElementById('stat-years').textContent = years.size || '—';
   } else {
     statsBar.style.display = 'none';
+    successWrap.style.display = 'none';
   }
+  refreshCommunityCountsForEvents(allEvents);
 
   if (events.length === 0) {
     list.innerHTML = `
@@ -2010,6 +2332,34 @@ function renderHostTracker(sourceEvents) {
       <div class="host-meta">Next: ${nextTxt}</div>
       <div class="host-meta">Last: ${lastTxt}</div>
     </div>`;
+  }).join('');
+}
+
+function renderSuccessChart(sourceEvents) {
+  const list = document.getElementById('success-chart-list');
+  if (!list) return;
+  if (!sourceEvents || sourceEvents.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+
+  const ranked = sourceEvents
+    .map((ev) => ({ ev, score: computeEventSuccessScore(ev) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+
+  const top = ranked[0] ? ranked[0].score : 0;
+  list.innerHTML = ranked.map(({ ev, score }) => {
+    const width = top > 0 ? Math.max(6, Math.round((score / top) * 100)) : 6;
+    return `
+      <div class="success-row" onclick="openDetail('${ev.id}')">
+        <div class="success-row-head">
+          <div class="success-row-name">${escapeHtml(ev.name || 'Untitled event')}</div>
+          <div class="success-row-score">${score}/100</div>
+        </div>
+        <div class="success-bar"><div class="success-bar-fill" style="width:${width}%"></div></div>
+      </div>
+    `;
   }).join('');
 }
 
@@ -2284,6 +2634,8 @@ function renderCard(ev) {
 
   const dateStr = ev.date ? new Date(ev.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const tags = (ev.tags || []).slice(0, 3).map(t => `<div class="tag">${t}</div>`).join('');
+  const trend = computeTrendInsight(ev);
+  const communityCount = communityCountsByEvent[ev.id] || 0;
 
   // Get earliest camera time from EXIF
   let timeStr = '';
@@ -2305,6 +2657,8 @@ function renderCard(ev) {
       <div class="card-title">${ev.name || 'Untitled Event'}</div>
       <div class="card-meta">
         <div class="meta-item">${ev.eventType === 'interested' ? 'Interested' : 'Hosted'}</div>
+        <div class="meta-item">${trend.status}</div>
+        <div class="community-count-badge" data-community-badge="${ev.id}">${communityCount} community</div>
         ${dateStr ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dateStr}${timeStr ? ' · ' + timeStr : ''}</div>` : ''}
         ${ev.location ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${ev.location}</div>` : ''}
         ${ev.client ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${ev.client}</div>` : ''}
@@ -2347,11 +2701,247 @@ if (discoverKeywordInput) {
   });
 }
 
+function escapeAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function updateCommunityAuthUI() {
+  const state = document.getElementById('community-auth-state');
+  const gBtn = document.getElementById('btn-google-login');
+  const oBtn = document.getElementById('btn-logout');
+  if (!state || !gBtn || !oBtn) return;
+
+  if (!firebaseReady) {
+    state.textContent = 'Community is offline until Firebase is configured in this file.';
+    gBtn.style.display = 'none';
+    oBtn.style.display = 'none';
+    return;
+  }
+  if (communityUser) {
+    state.textContent = `Signed in as ${communityUser.displayName || communityUser.email || 'User'}`;
+    gBtn.style.display = 'none';
+    oBtn.style.display = '';
+  } else {
+    state.textContent = 'Sign in to chat, comment, and upload media for this event.';
+    gBtn.style.display = '';
+    oBtn.style.display = 'none';
+  }
+}
+
+async function signInWithGoogle() {
+  if (!firebaseReady || !firebaseAuth) return showToast('Firebase auth is not ready');
+  try {
+    await firebaseAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    showToast('Signed in with Google');
+  } catch {
+    showToast('Google sign-in failed');
+  }
+}
+
+async function signOutCommunity() {
+  if (!firebaseReady || !firebaseAuth) return;
+  await firebaseAuth.signOut();
+  showToast('Signed out');
+}
+
+function subscribeCommunityForCurrentEvent() {
+  if (communityUnsubscribe) {
+    communityUnsubscribe();
+    communityUnsubscribe = null;
+  }
+  const list = document.getElementById('community-list');
+  if (!list) return;
+  if (!currentEventId) {
+    list.innerHTML = '';
+    return;
+  }
+  if (!firebaseReady || !firestoreDb) {
+    list.innerHTML = '<div class="community-item"><div class="community-item-text">Set Firebase config to enable live event chat and contributions.</div></div>';
+    return;
+  }
+
+  communityUnsubscribe = firestoreDb.collection('eventCommunity')
+    .where('eventId', '==', currentEventId)
+    .orderBy('createdAt', 'desc')
+    .limit(40)
+    .onSnapshot((snap) => {
+      const rows = [];
+      snap.forEach((doc) => rows.push({ id: doc.id, ...doc.data() }));
+      renderCommunityList(rows);
+      communityCountsByEvent[currentEventId] = rows.length;
+      updateCommunityBadgesDOM();
+    }, () => {
+      list.innerHTML = '<div class="community-item"><div class="community-item-text">Could not load community feed.</div></div>';
+    });
+}
+
+function canDeleteCommunityPost(item) {
+  if (!communityUser) return false;
+  const email = String(communityUser.email || '').toLowerCase();
+  const isAdmin = COMMUNITY_ADMIN_EMAILS.map((e) => String(e).toLowerCase()).includes(email);
+  return isAdmin || item.userId === communityUser.uid;
+}
+
+function renderCommunityList(items) {
+  const list = document.getElementById('community-list');
+  if (!list) return;
+  if (!items || items.length === 0) {
+    list.innerHTML = '<div class="community-item"><div class="community-item-text">No community posts yet. Be the first to add one.</div></div>';
+    return;
+  }
+  list.innerHTML = items.map((it) => {
+    const createdAt = it.createdAt?.toDate ? it.createdAt.toDate() : null;
+    const when = createdAt ? createdAt.toLocaleString() : 'Just now';
+    const kind = it.kind || 'chat';
+    const name = escapeHtml(it.userName || 'Guest');
+    const text = escapeHtml(it.text || '');
+    const media = it.mediaUrl
+      ? ((it.mediaType || '').startsWith('video/')
+        ? `<video class="community-media" src="${escapeAttr(it.mediaUrl)}" controls playsinline></video>`
+        : `<img class="community-media" src="${escapeAttr(it.mediaUrl)}" alt="">`)
+      : '';
+    const deleteBtn = canDeleteCommunityPost(it)
+      ? `<button type="button" class="community-item-delete" onclick="deleteCommunityPost('${it.id}','${escapeAttr(it.mediaPath || '')}')">Delete</button>`
+      : '';
+    return `<div class="community-item">
+      <div class="community-item-head">
+        <span>${name}</span>
+        <span>${when}</span>
+      </div>
+      <div class="community-item-head">
+        <span class="community-item-kind">${kind}</span>
+        ${deleteBtn}
+      </div>
+      ${text ? `<div class="community-item-text">${text}</div>` : ''}
+      ${media}
+    </div>`;
+  }).join('');
+}
+
+async function deleteCommunityPost(postId, mediaPath) {
+  if (!firebaseReady || !firestoreDb) return;
+  if (!communityUser) return showToast('Sign in first');
+  const proceed = confirm('Delete this community post?');
+  if (!proceed) return;
+  try {
+    const docRef = firestoreDb.collection('eventCommunity').doc(postId);
+    const snap = await docRef.get();
+    if (!snap.exists) return showToast('Post not found');
+    const item = { id: snap.id, ...snap.data() };
+    if (!canDeleteCommunityPost(item)) return showToast('You cannot delete this post');
+    await docRef.delete();
+    if (mediaPath && firebaseStorage) {
+      try { await firebaseStorage.ref(mediaPath).delete(); } catch {}
+    }
+    showToast('Post deleted');
+    trackEvent('community_post_deleted');
+  } catch {
+    showToast('Could not delete post');
+  }
+}
+
+async function refreshCommunityCountsForEvents(events) {
+  if (!firebaseReady || !firestoreDb || communityCountsLoading) return;
+  const ids = [...new Set((events || []).map((e) => e.id).filter(Boolean))];
+  if (ids.length === 0) return;
+  communityCountsLoading = true;
+  try {
+    await Promise.all(ids.map(async (eventId) => {
+      if (typeof communityCountsByEvent[eventId] === 'number') return;
+      const snap = await firestoreDb.collection('eventCommunity')
+        .where('eventId', '==', eventId)
+        .limit(200)
+        .get();
+      communityCountsByEvent[eventId] = snap.size;
+    }));
+    updateCommunityBadgesDOM();
+  } catch {
+    // Silent fallback
+  } finally {
+    communityCountsLoading = false;
+  }
+}
+
+function updateCommunityBadgesDOM() {
+  const nodes = document.querySelectorAll('[data-community-badge]');
+  nodes.forEach((n) => {
+    const eventId = n.getAttribute('data-community-badge');
+    const count = communityCountsByEvent[eventId] || 0;
+    n.textContent = `${count} community`;
+  });
+}
+
+async function sendCommunityMessage(kind) {
+  if (!firebaseReady || !firestoreDb) return showToast('Firebase is not configured yet');
+  if (!communityUser) return showToast('Sign in first to post');
+  if (!currentEventId) return;
+  const inputId = kind === 'comment' ? 'community-comment-input' : 'community-chat-input';
+  const input = document.getElementById(inputId);
+  const text = (input?.value || '').trim();
+  if (!text) return showToast('Type a message first');
+  try {
+    await firestoreDb.collection('eventCommunity').add({
+      eventId: currentEventId,
+      kind,
+      text,
+      mediaUrl: '',
+      mediaType: '',
+      userId: communityUser.uid,
+      userName: communityUser.displayName || communityUser.email || 'User',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if (input) input.value = '';
+    trackEvent('community_post_created', { kind });
+  } catch {
+    showToast('Could not post message');
+  }
+}
+
+async function uploadCommunityMedia() {
+  if (!firebaseReady || !firebaseStorage || !firestoreDb) return showToast('Firebase is not configured yet');
+  if (!communityUser) return showToast('Sign in first to upload media');
+  if (!currentEventId) return;
+  const input = document.getElementById('community-media-input');
+  const file = input?.files?.[0];
+  if (!file) return showToast('Choose a file first');
+  const isVideo = (file.type || '').startsWith('video/');
+  const max = isVideo ? 40 * 1024 * 1024 : 15 * 1024 * 1024;
+  if (file.size > max) return showToast(`File too large. Max ${isVideo ? '40MB video' : '15MB image'}`);
+  try {
+    showToast('Uploading media...');
+    const path = `event-community/${currentEventId}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, '_')}`;
+    const ref = firebaseStorage.ref(path);
+    await ref.put(file, { contentType: file.type || 'application/octet-stream' });
+    const mediaUrl = await ref.getDownloadURL();
+    await firestoreDb.collection('eventCommunity').add({
+      eventId: currentEventId,
+      kind: 'media',
+      text: '',
+      mediaUrl,
+      mediaPath: path,
+      mediaType: file.type || '',
+      userId: communityUser.uid,
+      userName: communityUser.displayName || communityUser.email || 'User',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = '';
+    showToast('Media uploaded');
+    trackEvent('community_media_uploaded', { media_type: isVideo ? 'video' : 'image' });
+  } catch {
+    showToast('Media upload failed');
+  }
+}
+
 // ══════════════════════════════════════════
 //  DETAIL
 // ══════════════════════════════════════════
 async function openDetail(id) {
   currentEventId = id;
+  subscribeCommunityForCurrentEvent();
   const ev = await dbGet(id);
   const photos = ev.photos || [];
 
@@ -2395,7 +2985,9 @@ async function openDetail(id) {
   }
 
   const metaRows = [];
+  const trend = computeTrendInsight(ev);
   metaRows.push({ icon: '#icon-person', color: '#30D158', label: 'Type', value: ev.eventType === 'interested' ? 'Interested Event' : 'Hosted Event' });
+  metaRows.push({ icon: '#icon-photo', color: '#FF9F0A', label: 'Trend', value: `${trend.status} · ${trend.engagementRate}% ER` });
   if (dateStr) metaRows.push({ icon: '#icon-cal', color: '#FF9F0A', label: 'Date', value: dateStr + (timeRange ? ` · ${timeRange}` : '') });
   if (ev.location || gpsLocs[0]) metaRows.push({ icon: '#icon-pin', color: '#FF453A', label: 'Location', value: ev.location || gpsLocs[0] });
   if (ev.client) metaRows.push({ icon: '#icon-person', color: '#30D158', label: 'Client / Organiser', value: ev.client });
@@ -2423,6 +3015,18 @@ async function openDetail(id) {
       <div class="meta-row-content">
         <div class="meta-row-label">Tags</div>
         <div class="meta-row-value">${ev.tags.join(', ')}</div>
+      </div>
+    </div>`;
+  }
+
+  if (ev.promo && (ev.promo.links || []).length > 0) {
+    mc.innerHTML += `<div class="meta-row">
+      <div class="meta-row-icon" style="background:#30D15822">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l2.12-2.12a5 5 0 00-7.07-7.07L11.4 5.54"/><path d="M14 11a5 5 0 00-7.54-.54L4.34 12.58a5 5 0 007.07 7.07l1.2-1.2"/></svg>
+      </div>
+      <div class="meta-row-content">
+        <div class="meta-row-label">Promotion Links</div>
+        <div class="meta-row-value">${(ev.promo.links || []).slice(0, 3).map(l => `<a href="${l}" target="_blank" rel="noopener">${l}</a>`).join('<br>')}</div>
       </div>
     </div>`;
   }
@@ -2506,6 +3110,11 @@ async function openEdit() {
   document.getElementById('field-desc').value = ev.description || '';
   document.getElementById('field-tags').value = (ev.tags || []).join(', ');
   document.getElementById('field-type').value = ev.eventType || 'hosted';
+  document.getElementById('field-promo-links').value = (ev.promo?.links || []).join('\n');
+  document.getElementById('field-promo-likes').value = ev.promo?.likes || '';
+  document.getElementById('field-promo-comments').value = ev.promo?.comments || '';
+  document.getElementById('field-promo-shares').value = ev.promo?.shares || '';
+  document.getElementById('field-promo-views').value = ev.promo?.views || '';
   setReminderDaysInForm(ev.reminders || [30, 10]);
   pickedFiles = (ev.photos || []).map(p => ({ dataUrl: p.dataUrl, exif: p.exif, mediaType: p.mediaType || 'image/*', existing: true }));
   renderPickedPreviews();
@@ -2517,7 +3126,7 @@ async function openEdit() {
 }
 
 function clearForm() {
-  ['field-name','field-date','field-location','field-client','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
+  ['field-name','field-date','field-location','field-client','field-desc','field-tags','field-promo-links','field-promo-likes','field-promo-comments','field-promo-shares','field-promo-views'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('field-type').value = 'hosted';
   setReminderDaysInForm([30, 10]);
   pickedFiles = [];
@@ -2659,6 +3268,17 @@ async function saveEvent() {
   const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
   const eventType = document.getElementById('field-type').value;
   const reminders = getReminderDaysFromForm();
+  const promoLinks = (document.getElementById('field-promo-links').value || '')
+    .split('\n')
+    .map((x) => x.trim())
+    .filter((x) => /^https?:\/\//i.test(x));
+  const promo = {
+    links: promoLinks,
+    likes: toNum(document.getElementById('field-promo-likes').value),
+    comments: toNum(document.getElementById('field-promo-comments').value),
+    shares: toNum(document.getElementById('field-promo-shares').value),
+    views: toNum(document.getElementById('field-promo-views').value)
+  };
 
   const photos = pickedFiles.map(p => ({ dataUrl: p.dataUrl, exif: p.exif || {}, mediaType: p.mediaType || 'image/*' }));
 
@@ -2671,6 +3291,7 @@ async function saveEvent() {
     description: document.getElementById('field-desc').value.trim(),
     eventType,
     reminders,
+    promo,
     tags,
     photos,
     updatedAt: Date.now()
@@ -2761,6 +3382,115 @@ async function downloadIcsForCurrentEvent() {
   downloadIcsForEvent(ev);
 }
 
+let jsPdfLoader = null;
+function loadJsPdf() {
+  if (window.jspdf?.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (jsPdfLoader) return jsPdfLoader;
+  jsPdfLoader = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s.async = true;
+    s.onload = () => resolve(window.jspdf?.jsPDF);
+    s.onerror = () => reject(new Error('Failed to load jsPDF'));
+    document.head.appendChild(s);
+  });
+  return jsPdfLoader;
+}
+
+function eventSummaryLines(ev) {
+  const trend = computeTrendInsight(ev);
+  return [
+    `Type: ${ev.eventType === 'interested' ? 'Interested' : 'Hosted'}`,
+    `Date: ${ev.date || 'N/A'}`,
+    `Location: ${ev.location || 'N/A'}`,
+    `Host: ${ev.client || 'N/A'}`,
+    `Trend: ${trend.status} (${trend.engagementRate}% ER)`,
+    `Tags: ${(ev.tags || []).join(', ') || 'N/A'}`
+  ];
+}
+
+async function downloadEventPdfForCurrentEvent() {
+  const ev = await getCurrentEvent();
+  if (!ev) return;
+  try {
+    showToast('Preparing PDF...');
+    const jsPDF = await loadJsPdf();
+    if (!jsPDF) throw new Error('jsPDF unavailable');
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 12;
+    let y = margin;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(ev.name || 'Event', margin, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text('EventCata by Ugoo Okogeri', margin, y);
+    y += 7;
+
+    const lines = eventSummaryLines(ev);
+    lines.forEach((line) => {
+      doc.text(line, margin, y);
+      y += 6;
+    });
+
+    if (ev.description) {
+      y += 2;
+      const descLines = doc.splitTextToSize(ev.description, pageW - margin * 2);
+      doc.text(descLines, margin, y);
+      y += Math.min(36, descLines.length * 5);
+    }
+
+    const imageMedia = (ev.photos || []).filter((p) => !p.mediaType || (p.mediaType || '').startsWith('image/'));
+    if (imageMedia.length > 0) {
+      y += 4;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Images', margin, y);
+      y += 5;
+    }
+
+    const gap = 4;
+    const cols = 2;
+    const cellW = (pageW - margin * 2 - gap) / cols;
+    const cellH = 55;
+    let col = 0;
+
+    for (let i = 0; i < imageMedia.length; i++) {
+      const p = imageMedia[i];
+      if (y + cellH > pageH - margin) {
+        doc.addPage();
+        y = margin;
+        col = 0;
+      }
+      const x = margin + col * (cellW + gap);
+      try {
+        doc.addImage(p.dataUrl, 'JPEG', x, y, cellW, cellH, undefined, 'FAST');
+      } catch {
+        try { doc.addImage(p.dataUrl, 'PNG', x, y, cellW, cellH, undefined, 'FAST'); } catch {}
+      }
+      col++;
+      if (col >= cols) {
+        col = 0;
+        y += cellH + gap;
+      }
+    }
+
+    const filename = `${(ev.name || 'event').replace(/[^\w\-]+/g, '_')}_EventCata.pdf`;
+    doc.save(filename);
+    showToast('PDF downloaded');
+    trackEvent('event_pdf_downloaded', { image_count: imageMedia.length });
+  } catch {
+    showToast('Could not generate PDF');
+    trackEvent('event_pdf_failed');
+  }
+}
+
 function promptCalendarSyncForEvent(ev) {
   if (!isCalendarPromptEnabled()) return;
   if (!ev?.date) return;
@@ -2785,6 +3515,10 @@ function navigate(toId) {
 }
 
 function goBack(fromId, toId) {
+  if (fromId === 'detail' && communityUnsubscribe) {
+    communityUnsubscribe();
+    communityUnsubscribe = null;
+  }
   document.getElementById(fromId).classList.remove('active', 'behind');
   document.getElementById(toId).classList.remove('behind');
   document.getElementById(toId).classList.add('active');
