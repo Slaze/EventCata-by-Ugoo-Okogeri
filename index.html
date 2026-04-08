@@ -703,6 +703,58 @@ textarea.form-input {
   transition: opacity 0.15s;
 }
 .save-btn:active { opacity: 0.8; }
+.save-btn.is-saving {
+  opacity: 0.9;
+  cursor: wait;
+}
+.save-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.save-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.45);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+.save-status {
+  margin: 8px 16px 0;
+  font-size: 12px;
+  color: var(--text3);
+  min-height: 16px;
+}
+.save-status.error { color: #ff8d85; }
+.sticky-notice {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 560px);
+  background: rgba(255,69,58,0.14);
+  border: 1px solid rgba(255,69,58,0.45);
+  color: #ffd2cf;
+  border-radius: 12px;
+  padding: 10px 12px;
+  z-index: 450;
+  display: none;
+  backdrop-filter: blur(8px);
+}
+.sticky-notice.show { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sticky-notice-text { font-size: 12px; line-height: 1.35; }
+.sticky-notice-close {
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 .danger-btn {
   width: calc(100% - 32px);
   margin: 8px 16px 0;
@@ -1090,6 +1142,28 @@ textarea.form-input {
   border-radius: 999px;
   padding: 2px 8px;
 }
+.community-upload-progress {
+  margin: 6px 0 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface2);
+  overflow: hidden;
+  display: none;
+}
+.community-upload-progress.show { display: block; }
+.community-upload-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0a84ff, #30d158);
+  transition: width 0.15s ease;
+}
+.community-upload-label {
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0 0 8px;
+  display: none;
+}
+.community-upload-label.show { display: block; }
 
 </style>
 </head>
@@ -1211,6 +1285,10 @@ textarea.form-input {
         <button class="community-btn" type="button" onclick="sendCommunityMessage('comment')">Add comment</button>
         <input class="community-file" id="community-media-input" type="file" accept="image/*,video/*">
         <button class="community-btn" type="button" onclick="uploadCommunityMedia()">Upload media</button>
+        <div class="community-upload-progress" id="community-upload-progress">
+          <div class="community-upload-progress-bar" id="community-upload-progress-bar"></div>
+        </div>
+        <div class="community-upload-label" id="community-upload-label"></div>
         <div class="community-list" id="community-list"></div>
       </div>
     </div>
@@ -1316,13 +1394,7 @@ textarea.form-input {
     <div class="form-section">
       <div class="form-label">Promotion Intelligence</div>
       <div class="form-field">
-        <textarea class="form-input" id="field-promo-links" placeholder="Promotion links (one per line): https://..."></textarea>
-      </div>
-      <div class="promo-grid" style="margin-top:8px;">
-        <div class="form-field"><input class="form-input" id="field-promo-likes" type="number" min="0" placeholder="Likes"></div>
-        <div class="form-field"><input class="form-input" id="field-promo-comments" type="number" min="0" placeholder="Comments"></div>
-        <div class="form-field"><input class="form-input" id="field-promo-shares" type="number" min="0" placeholder="Shares/Reposts"></div>
-        <div class="form-field"><input class="form-input" id="field-promo-views" type="number" min="0" placeholder="Views"></div>
+        <div class="discover-item-meta">Auto mode is enabled. Trend and success are estimated from community activity, media volume, and event timing.</div>
       </div>
     </div>
 
@@ -1349,7 +1421,8 @@ textarea.form-input {
       <div class="picked-previews" id="picked-previews"></div>
     </div>
 
-    <button class="save-btn" onclick="saveEvent()" id="save-btn">Save Event</button>
+    <button class="save-btn" onclick="saveEvent()" id="save-btn"><span class="save-btn-inner" id="save-btn-inner">Save Event</span></button>
+    <div class="save-status" id="save-status"></div>
     <button class="danger-btn" id="delete-btn" onclick="deleteCurrentEvent()" style="display:none;margin-bottom:20px">Delete Event</button>
     <div style="height:40px"></div>
   </div>
@@ -1367,6 +1440,10 @@ textarea.form-input {
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="sticky-notice" id="sticky-notice">
+  <div class="sticky-notice-text" id="sticky-notice-text"></div>
+  <button class="sticky-notice-close" type="button" onclick="hideStickyNotice()">✕</button>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -1767,12 +1844,26 @@ function toNum(v) {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function computeTrendInsight(ev) {
+function getAutoPromotionSignals(ev) {
   const p = ev.promo || {};
-  const likes = toNum(p.likes);
-  const comments = toNum(p.comments);
-  const shares = toNum(p.shares);
-  const views = toNum(p.views);
+  const baseLikes = toNum(p.likes);
+  const baseComments = toNum(p.comments);
+  const baseShares = toNum(p.shares);
+  const baseViews = toNum(p.views);
+  const communityCount = toNum(communityCountsByEvent[ev.id] || 0);
+  const mediaCount = toNum((ev.photos || []).length);
+  const daysTo = getDaysToEvent(ev.date);
+  const momentumBoost = daysTo !== null && daysTo >= 0 && daysTo <= 21 ? 1.2 : 1;
+
+  const likes = Math.round((baseLikes + communityCount * 8 + mediaCount * 3) * momentumBoost);
+  const comments = Math.round((baseComments + communityCount * 3 + mediaCount) * momentumBoost);
+  const shares = Math.round((baseShares + communityCount * 2 + mediaCount * 0.7) * momentumBoost);
+  const views = Math.round((baseViews + communityCount * 65 + mediaCount * 40) * momentumBoost);
+  return { likes, comments, shares, views };
+}
+
+function computeTrendInsight(ev) {
+  const { likes, comments, shares, views } = getAutoPromotionSignals(ev);
   const weighted = likes + comments * 2 + shares * 3;
   const engagementRate = views > 0 ? (weighted / views) : 0;
   const daysTo = getDaysToEvent(ev.date);
@@ -1795,11 +1886,7 @@ function computeTrendInsight(ev) {
 
 function computeEventSuccessScore(ev) {
   const trend = computeTrendInsight(ev);
-  const promo = ev.promo || {};
-  const likes = toNum(promo.likes);
-  const comments = toNum(promo.comments);
-  const shares = toNum(promo.shares);
-  const views = toNum(promo.views);
+  const { likes, comments, shares, views } = getAutoPromotionSignals(ev);
   const mediaCount = (ev.photos || []).length;
   const daysTo = getDaysToEvent(ev.date);
 
@@ -2086,6 +2173,29 @@ function setImportProgress(done, total) {
   const pct = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
   wrap.classList.add('show');
   bar.style.width = `${pct}%`;
+}
+
+function setCommunityUploadProgress(pct, done) {
+  const wrap = document.getElementById('community-upload-progress');
+  const bar = document.getElementById('community-upload-progress-bar');
+  const label = document.getElementById('community-upload-label');
+  if (!wrap || !bar || !label) return;
+  if (done) {
+    bar.style.width = '100%';
+    label.textContent = 'Upload complete';
+    setTimeout(() => {
+      wrap.classList.remove('show');
+      label.classList.remove('show');
+      bar.style.width = '0%';
+      label.textContent = '';
+    }, 700);
+    return;
+  }
+  const safePct = Math.max(0, Math.min(100, Math.round(pct || 0)));
+  wrap.classList.add('show');
+  label.classList.add('show');
+  bar.style.width = `${safePct}%`;
+  label.textContent = `Uploading... ${safePct}%`;
 }
 
 function isIos() {
@@ -2915,7 +3025,16 @@ async function uploadCommunityMedia() {
     showToast('Uploading media...');
     const path = `event-community/${currentEventId}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, '_')}`;
     const ref = firebaseStorage.ref(path);
-    await ref.put(file, { contentType: file.type || 'application/octet-stream' });
+    setCommunityUploadProgress(0, false);
+    await new Promise((resolve, reject) => {
+      const task = ref.put(file, { contentType: file.type || 'application/octet-stream' });
+      task.on('state_changed', (snap) => {
+        const total = snap.totalBytes || 0;
+        const transferred = snap.bytesTransferred || 0;
+        const pct = total > 0 ? (transferred / total) * 100 : 0;
+        setCommunityUploadProgress(pct, false);
+      }, reject, resolve);
+    });
     const mediaUrl = await ref.getDownloadURL();
     await firestoreDb.collection('eventCommunity').add({
       eventId: currentEventId,
@@ -2929,9 +3048,11 @@ async function uploadCommunityMedia() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
+    setCommunityUploadProgress(100, true);
     showToast('Media uploaded');
     trackEvent('community_media_uploaded', { media_type: isVideo ? 'video' : 'image' });
   } catch {
+    setCommunityUploadProgress(0, true);
     showToast('Media upload failed');
   }
 }
@@ -3019,18 +3140,6 @@ async function openDetail(id) {
     </div>`;
   }
 
-  if (ev.promo && (ev.promo.links || []).length > 0) {
-    mc.innerHTML += `<div class="meta-row">
-      <div class="meta-row-icon" style="background:#30D15822">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l2.12-2.12a5 5 0 00-7.07-7.07L11.4 5.54"/><path d="M14 11a5 5 0 00-7.54-.54L4.34 12.58a5 5 0 007.07 7.07l1.2-1.2"/></svg>
-      </div>
-      <div class="meta-row-content">
-        <div class="meta-row-label">Promotion Links</div>
-        <div class="meta-row-value">${(ev.promo.links || []).slice(0, 3).map(l => `<a href="${l}" target="_blank" rel="noopener">${l}</a>`).join('<br>')}</div>
-      </div>
-    </div>`;
-  }
-
   // Photo grid
   const grid = document.getElementById('detail-photo-grid');
   const ptitle = document.getElementById('detail-photos-title');
@@ -3094,8 +3203,8 @@ function openCreate() {
   pickedFiles = [];
   clearForm();
   document.getElementById('create-screen-title').textContent = 'New Event';
-  document.getElementById('save-btn').textContent = 'Save Event';
   document.getElementById('delete-btn').style.display = 'none';
+  setSaveState('idle', '');
   navigate('create-screen');
 }
 
@@ -3110,23 +3219,18 @@ async function openEdit() {
   document.getElementById('field-desc').value = ev.description || '';
   document.getElementById('field-tags').value = (ev.tags || []).join(', ');
   document.getElementById('field-type').value = ev.eventType || 'hosted';
-  document.getElementById('field-promo-links').value = (ev.promo?.links || []).join('\n');
-  document.getElementById('field-promo-likes').value = ev.promo?.likes || '';
-  document.getElementById('field-promo-comments').value = ev.promo?.comments || '';
-  document.getElementById('field-promo-shares').value = ev.promo?.shares || '';
-  document.getElementById('field-promo-views').value = ev.promo?.views || '';
   setReminderDaysInForm(ev.reminders || [30, 10]);
   pickedFiles = (ev.photos || []).map(p => ({ dataUrl: p.dataUrl, exif: p.exif, mediaType: p.mediaType || 'image/*', existing: true }));
   renderPickedPreviews();
   updateMediaLimitsUI();
   document.getElementById('create-screen-title').textContent = 'Edit Event';
-  document.getElementById('save-btn').textContent = 'Update Event';
   document.getElementById('delete-btn').style.display = '';
+  setSaveState('idle', '');
   navigate('create-screen');
 }
 
 function clearForm() {
-  ['field-name','field-date','field-location','field-client','field-desc','field-tags','field-promo-links','field-promo-likes','field-promo-comments','field-promo-shares','field-promo-views'].forEach(id => document.getElementById(id).value = '');
+  ['field-name','field-date','field-location','field-client','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('field-type').value = 'hosted';
   setReminderDaysInForm([30, 10]);
   pickedFiles = [];
@@ -3260,25 +3364,53 @@ function fileToDataUrl(file) {
   });
 }
 
+function setSaveState(state, message) {
+  const btn = document.getElementById('save-btn');
+  const inner = document.getElementById('save-btn-inner');
+  const status = document.getElementById('save-status');
+  if (!btn || !inner || !status) return;
+  const baseLabel = editMode ? 'Update Event' : 'Save Event';
+  if (state === 'saving') {
+    hideStickyNotice();
+    btn.disabled = true;
+    btn.classList.add('is-saving');
+    inner.innerHTML = '<span class="save-spinner" aria-hidden="true"></span><span>Saving...</span>';
+    status.classList.remove('error');
+    status.textContent = 'Saving your event, please wait...';
+    return;
+  }
+  btn.disabled = false;
+  btn.classList.remove('is-saving');
+  inner.textContent = baseLabel;
+  status.classList.toggle('error', state === 'error');
+  status.textContent = message || '';
+}
+
+function showStickyNotice(message) {
+  const wrap = document.getElementById('sticky-notice');
+  const text = document.getElementById('sticky-notice-text');
+  if (!wrap || !text) return;
+  text.textContent = message || 'An error occurred.';
+  wrap.classList.add('show');
+}
+
+function hideStickyNotice() {
+  const wrap = document.getElementById('sticky-notice');
+  const text = document.getElementById('sticky-notice-text');
+  if (!wrap || !text) return;
+  wrap.classList.remove('show');
+  text.textContent = '';
+}
+
 async function saveEvent() {
   const name = document.getElementById('field-name').value.trim();
   if (!name) { showToast('Please enter an event name'); return; }
+  setSaveState('saving');
 
   const tagsRaw = document.getElementById('field-tags').value;
   const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
   const eventType = document.getElementById('field-type').value;
   const reminders = getReminderDaysFromForm();
-  const promoLinks = (document.getElementById('field-promo-links').value || '')
-    .split('\n')
-    .map((x) => x.trim())
-    .filter((x) => /^https?:\/\//i.test(x));
-  const promo = {
-    links: promoLinks,
-    likes: toNum(document.getElementById('field-promo-likes').value),
-    comments: toNum(document.getElementById('field-promo-comments').value),
-    shares: toNum(document.getElementById('field-promo-shares').value),
-    views: toNum(document.getElementById('field-promo-views').value)
-  };
 
   const photos = pickedFiles.map(p => ({ dataUrl: p.dataUrl, exif: p.exif || {}, mediaType: p.mediaType || 'image/*' }));
 
@@ -3291,7 +3423,6 @@ async function saveEvent() {
     description: document.getElementById('field-desc').value.trim(),
     eventType,
     reminders,
-    promo,
     tags,
     photos,
     updatedAt: Date.now()
@@ -3302,10 +3433,14 @@ async function saveEvent() {
   } catch (err) {
     const isQuota = (err && (err.name === 'QuotaExceededError' || err.name === 'UnknownError'));
     if (isQuota) {
+      setSaveState('error', 'Save failed: local storage is full. Reduce media size/count and try again.');
+      showStickyNotice('Save failed: local storage is full. Reduce media size/count and try again. Close this message when done.');
       showToast('Storage full. Reduce media count/size and try again.');
       trackEvent('event_save_failed_quota', { selected_items: pickedFiles.length });
       return;
     }
+    setSaveState('error', 'Save failed. Please retry.');
+    showStickyNotice('Save failed. Please retry and close this message when done.');
     showToast('Could not save event. Please try again.');
     trackEvent('event_save_failed', { selected_items: pickedFiles.length });
     return;
@@ -3326,6 +3461,8 @@ async function saveEvent() {
   } else {
     goBack('create-screen', 'home');
   }
+  hideStickyNotice();
+  setSaveState('idle', '');
 }
 
 async function deleteCurrentEvent() {
