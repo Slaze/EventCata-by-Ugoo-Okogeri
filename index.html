@@ -2080,7 +2080,6 @@ function renderSocialPlatformLinks(location, keywords) {
     ['threads', 'Threads', `https://www.threads.net/search?q=${q}`],
     ['instagram', 'Instagram', `https://www.instagram.com/explore/search/keyword/?q=${q}`],
     ['youtube', 'YouTube', `https://www.youtube.com/results?search_query=${q}`],
-    ['reddit', 'Reddit', `https://www.reddit.com/search/?q=${q}&sort=top&t=week`],
     ['eventbrite', 'Eventbrite', `https://www.eventbrite.com/d/online/${encodeURIComponent(location)}--events/`],
     ['meetup', 'Meetup', `https://www.meetup.com/find/?keywords=${q}`],
     ['google', 'Google', `https://www.google.com/search?q=${q}`]
@@ -2125,7 +2124,6 @@ function openSocialSearch(platform) {
     threads: `https://www.threads.net/search?q=${q}`,
     instagram: `https://www.instagram.com/explore/search/keyword/?q=${q}`,
     youtube: `https://www.youtube.com/results?search_query=${q}`,
-    reddit: `https://www.reddit.com/search/?q=${q}&sort=top&t=week`,
     eventbrite: `https://www.eventbrite.com/d/online/${loc || encodeURIComponent(location)}--events/`,
     meetup: `https://www.meetup.com/find/?keywords=${q}`,
     google: `https://www.google.com/search?q=${q}`
@@ -2150,9 +2148,8 @@ async function discoverEventsNow() {
   const query = built.encoded;
   const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}`);
 
-  const [newsRes, redditRes] = await Promise.allSettled([
-    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=20`),
-    fetch(`https://www.reddit.com/search.json?q=${query}&sort=top&t=week&limit=20`)
+  const [newsRes] = await Promise.allSettled([
+    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=20`)
   ]);
 
   const items = [];
@@ -2169,20 +2166,14 @@ async function discoverEventsNow() {
     } catch {}
   }
 
-  if (redditRes.status === 'fulfilled' && redditRes.value.ok) {
-    try {
-      const red = await redditRes.value.json();
-      (((red || {}).data || {}).children || []).forEach((c) => {
-        const d = c.data || {};
-        items.push({
-          source: `Reddit${d.subreddit ? ` r/${d.subreddit}` : ''}`,
-          title: d.title || '',
-          description: d.selftext || '',
-          link: d.permalink ? `https://www.reddit.com${d.permalink}` : 'https://www.reddit.com'
-        });
-      });
-    } catch {}
-  }
+  const socialDiscussionItems = [
+    { source: 'X/Twitter Discussions', title: `Live discussions in ${location}`, description: built.text, link: `https://x.com/search?q=${query}&f=live` },
+    { source: 'Facebook Discussions', title: `Trending posts/events in ${location}`, description: built.text, link: `https://www.facebook.com/search/events/?q=${query}` },
+    { source: 'TikTok Discussions', title: `Trending event videos in ${location}`, description: built.text, link: `https://www.tiktok.com/search?q=${query}` },
+    { source: 'Threads Discussions', title: `Threads conversations for ${location} events`, description: built.text, link: `https://www.threads.net/search?q=${query}` },
+    { source: 'Instagram Discussions', title: `Instagram keyword discussions in ${location}`, description: built.text, link: `https://www.instagram.com/explore/search/keyword/?q=${query}` }
+  ];
+  items.push(...socialDiscussionItems);
 
   const unique = [];
   const seen = new Set();
@@ -2309,6 +2300,25 @@ function setFilter(f) {
 }
 
 document.getElementById('search-input').addEventListener('input', () => renderHome());
+let discoverDebounceTimer;
+const discoverLocationInput = document.getElementById('discover-location');
+const discoverKeywordInput = document.getElementById('discover-keywords');
+if (discoverLocationInput) {
+  discoverLocationInput.addEventListener('input', () => {
+    clearTimeout(discoverDebounceTimer);
+    const location = discoverLocationInput.value.trim();
+    if (!location || location.length < 3) return;
+    discoverDebounceTimer = setTimeout(() => { discoverEventsNow(); }, 700);
+  });
+}
+if (discoverKeywordInput) {
+  discoverKeywordInput.addEventListener('input', () => {
+    clearTimeout(discoverDebounceTimer);
+    const location = (discoverLocationInput?.value || '').trim();
+    if (!location || location.length < 3) return;
+    discoverDebounceTimer = setTimeout(() => { discoverEventsNow(); }, 700);
+  });
+}
 
 // ══════════════════════════════════════════
 //  DETAIL
