@@ -222,6 +222,22 @@ body.splash-active { overflow: hidden; }
   scrollbar-width: none;
 }
 .filter-row::-webkit-scrollbar { display: none; }
+.toolbar-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 10px;
+  align-items: center;
+}
+.toolbar-select, .toolbar-check {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.toolbar-check { display: inline-flex; align-items: center; gap: 6px; }
 .pill {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -280,6 +296,30 @@ body.splash-active { overflow: hidden; }
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
+}
+.wm-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.wm-media .wm-stamp {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.42);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 999px;
+  padding: 2px 7px;
+  pointer-events: none;
+  user-select: none;
+}
+#lightbox .wm-media .wm-stamp {
+  font-size: 13px;
+  right: 12px;
+  bottom: 12px;
 }
 .card-thumb-grid {
   display: grid;
@@ -729,6 +769,13 @@ textarea.form-input {
   background: linear-gradient(90deg, var(--accent), #4ea1ff);
   transition: width 0.15s ease;
 }
+.import-progress-label {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text3);
+  display: none;
+}
+.import-progress-label.show { display: block; }
 
 .picked-previews {
   display: grid;
@@ -853,6 +900,28 @@ textarea.form-input {
 }
 .stat-num { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.ops-row { display: flex; gap: 8px; padding: 0 16px 10px; }
+.ops-btn {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.insights-card {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: none;
+}
+.insights-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.insight-mini { font-size: 12px; color: var(--text2); }
 
 /* ─── SUCCESS CHART ─── */
 .success-wrap {
@@ -1269,6 +1338,16 @@ textarea.form-input {
         <input type="text" id="search-input" placeholder="Search by name, sponsor, or date…">
       </div>
     </div>
+    <div class="toolbar-row">
+      <select id="sort-mode" class="toolbar-select" onchange="renderHome()">
+        <option value="date_desc">Newest date</option>
+        <option value="date_asc">Oldest date</option>
+        <option value="trend_desc">Trend score</option>
+        <option value="success_desc">Success score</option>
+      </select>
+      <label class="toolbar-check"><input type="checkbox" id="filter-has-media" onchange="renderHome()">Has media</label>
+      <label class="toolbar-check"><input type="checkbox" id="filter-has-community" onchange="renderHome()">Has community</label>
+    </div>
 
     <div class="filter-row" id="filter-row">
       <div class="pill active" data-filter="all">All</div>
@@ -1278,6 +1357,20 @@ textarea.form-input {
       <div class="stat-card"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Media</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-years">0</div><div class="stat-label">Years</div></div>
+    </div>
+    <div class="ops-row">
+      <button class="ops-btn" type="button" onclick="exportEventsBackup()">Backup</button>
+      <button class="ops-btn" type="button" onclick="document.getElementById('restore-input').click()">Restore</button>
+      <input id="restore-input" type="file" accept="application/json" style="display:none">
+    </div>
+    <div class="insights-card" id="insights-card">
+      <div class="insights-title">Mini Dashboard</div>
+      <div class="insights-grid">
+        <div class="insight-mini" id="insight-added-week">Added (7d): 0</div>
+        <div class="insight-mini" id="insight-active-hosts">Active hosts: 0</div>
+        <div class="insight-mini" id="insight-top-event">Top trending: —</div>
+        <div class="insight-mini" id="insight-community-total">Community posts: 0</div>
+      </div>
     </div>
 
     <div class="success-wrap" id="success-chart-wrap">
@@ -1315,6 +1408,7 @@ textarea.form-input {
         <button class="discover-btn" type="button" onclick="discoverEventsNow()">Find</button>
       </div>
       <div class="discover-item-meta">Results are automatically ranked by your interests and event relevance.</div>
+      <div class="discover-item-meta" id="discover-last-updated"></div>
       <div class="discover-list" id="discover-list"></div>
     </div>
 
@@ -1407,6 +1501,18 @@ textarea.form-input {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <input type="date" id="field-date" placeholder="Date" aria-required="true">
         </div>
+        <div class="form-input-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+          <input type="time" id="field-start-time" placeholder="Start time (optional)">
+        </div>
+        <div class="form-input-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+          <input type="time" id="field-end-time" placeholder="End time (optional)">
+        </div>
+        <div class="form-input-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          <input type="text" id="field-timezone" placeholder="Timezone (e.g. Africa/Lagos)">
+        </div>
         <div class="form-input-row" id="field-location-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <input type="text" id="field-location" placeholder="Venue / Location" aria-required="true">
@@ -1425,6 +1531,18 @@ textarea.form-input {
       <div class="form-field">
         <textarea class="form-input" id="field-desc" placeholder="Brief description of the event…"></textarea>
       </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-label">Host Contact & Event Team</div>
+      <div class="form-field">
+        <input class="form-input" id="field-host-contact" type="text" placeholder="Host contact (name | phone | email)">
+      </div>
+      <button type="button" class="album-import-btn" onclick="pickHostContact()">Pick host from contacts</button>
+      <div class="form-field" style="margin-top:8px;">
+        <textarea class="form-input" id="field-team-members" placeholder="Team members (one per line): Name | Role | Phone/Email"></textarea>
+      </div>
+      <button type="button" class="album-import-btn" onclick="pickTeamContacts()">Add team from contacts</button>
     </div>
 
     <div class="form-section">
@@ -1466,6 +1584,15 @@ textarea.form-input {
           </label>
         </div>
       </div>
+      <div class="form-field" style="margin-top:8px;border:none;background:transparent;">
+        <select id="field-watermark" class="form-select">
+          <option value="@EnuguGod">@EnuguGod</option>
+          <option value="Alusi Oringo">Alusi Oringo</option>
+          <option value="Uphill Lens Productions">Uphill Lens Productions</option>
+          <option value="Uphill Lens Media">Uphill Lens Media</option>
+          <option value="Society of Ink">Society of Ink</option>
+        </select>
+      </div>
     </div>
 
     <div class="form-section">
@@ -1487,6 +1614,9 @@ textarea.form-input {
       <button type="button" class="album-import-btn" onclick="document.getElementById('album-input').click()">
         Import Album Folder (adds all media inside)
       </button>
+      <button type="button" class="album-import-btn" onclick="clearAllPickedMedia()">
+        Clear All Selected Media
+      </button>
       <button type="button" class="flyer-autofill-btn" onclick="autoFillFromFlyer()">
         Auto-fill Interested Event From Flyer
       </button>
@@ -1495,6 +1625,7 @@ textarea.form-input {
       <div class="import-progress" id="import-progress">
         <div class="import-progress-bar" id="import-progress-bar"></div>
       </div>
+      <div class="import-progress-label" id="import-progress-label"></div>
       <div class="picked-previews" id="picked-previews"></div>
     </div>
 
@@ -1736,6 +1867,9 @@ let communityUnsubscribe = null;
 let communityCountsByEvent = {};
 let communityCountsLoading = false;
 const COMMUNITY_ADMIN_EMAILS = []; // optional: add admin emails that can delete any post
+const PROFANITY_WORDS = ['fuck', 'shit', 'bitch', 'asshole', 'bastard'];
+const communitySendTimes = [];
+let swReady = null;
 const MAX_ITEMS_PER_EVENT = 200;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024; // 12MB
 const MAX_VIDEO_BYTES = 80 * 1024 * 1024; // 80MB
@@ -1749,6 +1883,19 @@ const VIDEO_TARGET_BITRATE = 1200000;
 function trackEvent(name, params = {}) {
   if (typeof window.gtag !== 'function') return;
   window.gtag('event', name, params);
+}
+
+function containsProfanity(text) {
+  const t = String(text || '').toLowerCase();
+  return PROFANITY_WORDS.some((w) => t.includes(w));
+}
+
+function canSendCommunityNow() {
+  const now = Date.now();
+  while (communitySendTimes.length && now - communitySendTimes[0] > 60000) communitySendTimes.shift();
+  if (communitySendTimes.length >= 8) return false;
+  communitySendTimes.push(now);
+  return true;
 }
 
 const FIREBASE_CONFIG = {
@@ -1779,6 +1926,7 @@ function initFirebaseCommunity() {
       communityUser = user || null;
       updateCommunityAuthUI();
       subscribeCommunityForCurrentEvent();
+      flushOfflineCommunityQueue();
     });
   } catch {
     firebaseReady = false;
@@ -1894,10 +2042,10 @@ function checkDueReminders() {
 
 function buildIcs(eventObj) {
   if (!eventObj?.date) return null;
-  const start = `${eventObj.date.replace(/-/g, '')}T090000`;
-  const endDate = new Date(`${eventObj.date}T09:00:00`);
-  endDate.setHours(endDate.getHours() + 2);
-  const end = `${toLocalIsoDate(endDate).replace(/-/g, '')}T110000`;
+  const startTime = (eventObj.startTime || '09:00').replace(':', '') + '00';
+  const endTime = (eventObj.endTime || '11:00').replace(':', '') + '00';
+  const start = `${eventObj.date.replace(/-/g, '')}T${startTime}`;
+  const end = `${eventObj.date.replace(/-/g, '')}T${endTime}`;
   const safe = (v) => String(v || '').replace(/\n/g, ' ').replace(/,/g, '\\,').replace(/;/g, '\\;');
   return [
     'BEGIN:VCALENDAR',
@@ -1911,6 +2059,7 @@ function buildIcs(eventObj) {
     `SUMMARY:${safe(eventObj.name)}`,
     `DESCRIPTION:${safe(eventObj.description)}`,
     `LOCATION:${safe(eventObj.location)}`,
+    `X-WR-TIMEZONE:${safe(eventObj.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')}`,
     'END:VEVENT',
     'END:VCALENDAR'
   ].join('\r\n');
@@ -2335,17 +2484,30 @@ function updateMediaLimitsUI() {
 function setImportProgress(done, total) {
   const wrap = document.getElementById('import-progress');
   const bar = document.getElementById('import-progress-bar');
+  const label = document.getElementById('import-progress-label');
   if (!total || done >= total) {
     bar.style.width = '100%';
+    if (label) {
+      label.classList.add('show');
+      label.textContent = total ? `Processed ${total}/${total} (100%)` : '';
+    }
     setTimeout(() => {
       wrap.classList.remove('show');
       bar.style.width = '0%';
+      if (label) {
+        label.classList.remove('show');
+        label.textContent = '';
+      }
     }, 450);
     return;
   }
   const pct = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
   wrap.classList.add('show');
   bar.style.width = `${pct}%`;
+  if (label) {
+    label.classList.add('show');
+    label.textContent = `Processing media ${done}/${total} (${pct}%)`;
+  }
 }
 
 function setCommunityUploadProgress(pct, done) {
@@ -2439,18 +2601,34 @@ function isVideoMedia(item) {
   return (item?.mediaType || '').startsWith('video/');
 }
 
+function getSelectedWatermarkLabel() {
+  const el = document.getElementById('field-watermark');
+  return (el?.value || '@EnuguGod').trim() || '@EnuguGod';
+}
+
+function getEventWatermarkLabel(eventId) {
+  const ev = (allEvents || []).find((e) => e.id === eventId);
+  return ev?.watermarkLabel || '@EnuguGod';
+}
+
+function getItemWatermarkLabel(item) {
+  return (item?.watermarkLabel || getSelectedWatermarkLabel() || '@EnuguGod');
+}
+
 function renderMediaThumb(item, lazy = false) {
+  const wm = escapeHtml(getItemWatermarkLabel(item));
   if (isVideoMedia(item)) {
-    return `<video src="${item.dataUrl}" muted playsinline preload="metadata"></video>`;
+    return `<div class="wm-media"><video src="${item.dataUrl}" muted playsinline preload="metadata"></video><span class="wm-stamp">${wm}</span></div>`;
   }
-  return `<img src="${item.dataUrl}" alt="" ${lazy ? 'loading="lazy"' : ''}>`;
+  return `<div class="wm-media"><img src="${item.dataUrl}" alt="" ${lazy ? 'loading="lazy"' : ''}><span class="wm-stamp">${wm}</span></div>`;
 }
 
 function renderMediaForLightbox(item) {
+  const wm = escapeHtml(getItemWatermarkLabel(item));
   if (isVideoMedia(item)) {
-    return `<video class="lb-media" src="${item.dataUrl}" controls playsinline></video>`;
+    return `<div class="wm-media"><video class="lb-media" src="${item.dataUrl}" controls playsinline></video><span class="wm-stamp">${wm}</span></div>`;
   }
-  return `<img class="lb-media" src="${item.dataUrl}" alt="">`;
+  return `<div class="wm-media"><img class="lb-media" src="${item.dataUrl}" alt=""><span class="wm-stamp">${wm}</span></div>`;
 }
 
 function matchesDateQuery(rawDate, query) {
@@ -2494,12 +2672,23 @@ openDB().then(async () => {
   initVideoStrictPreference();
   initInstallHelper();
   checkDueReminders();
+  initBackgroundPrefetch();
+  swReady = navigator.serviceWorker?.ready || null;
   trackEvent('app_loaded', { existing_events: allEvents.length });
   setTimeout(hideAppSplash, 450);
 }).catch(() => {
   showStickyNotice('App failed to initialize. Refresh and try again.');
   setTimeout(hideAppSplash, 600);
 });
+
+function initBackgroundPrefetch() {
+  const doPrefetch = () => {
+    loadTesseract().catch(() => {});
+    loadJsPdf().catch(() => {});
+  };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(doPrefetch, { timeout: 2500 });
+  else setTimeout(doPrefetch, 1200);
+}
 
 // ══════════════════════════════════════════
 //  RENDER HOME
@@ -2519,6 +2708,10 @@ function renderHome(filter, search) {
 
   // Apply filter
   if (activeFilter !== 'all') events = events.filter(e => (e.tags || []).includes(activeFilter));
+  const hasMedia = document.getElementById('filter-has-media')?.checked;
+  const hasCommunity = document.getElementById('filter-has-community')?.checked;
+  if (hasMedia) events = events.filter((e) => (e.photos || []).length > 0);
+  if (hasCommunity) events = events.filter((e) => (communityCountsByEvent[e.id] || 0) > 0);
 
   // Apply search: name, sponsor/client, and date parts (day/month/year)
   const q = document.getElementById('search-input').value.toLowerCase();
@@ -2527,6 +2720,10 @@ function renderHome(filter, search) {
     (e.client || '').toLowerCase().includes(q) ||
     matchesDateQuery(e.date, q)
   );
+  const sortMode = document.getElementById('sort-mode')?.value || 'date_desc';
+  if (sortMode === 'date_asc') events.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  else if (sortMode === 'trend_desc') events.sort((a, b) => computeTrendInsight(b).weighted - computeTrendInsight(a).weighted);
+  else if (sortMode === 'success_desc') events.sort((a, b) => computeEventSuccessScore(b) - computeEventSuccessScore(a));
 
   renderUpcomingSlider(allEvents);
   renderHostTracker(allEvents);
@@ -2547,6 +2744,7 @@ function renderHome(filter, search) {
     successWrap.style.display = 'none';
   }
   refreshCommunityCountsForEvents(allEvents);
+  renderMiniDashboard(allEvents);
 
   if (events.length === 0) {
     list.innerHTML = `
@@ -2573,6 +2771,25 @@ function renderHome(filter, search) {
       ${evs.map(ev => renderCard(ev)).join('')}
     </div>
   `).join('');
+}
+
+function renderMiniDashboard(sourceEvents) {
+  const card = document.getElementById('insights-card');
+  if (!card) return;
+  if (!sourceEvents || sourceEvents.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const added7d = sourceEvents.filter((e) => (e.updatedAt || 0) >= weekAgo).length;
+  const hosts = new Set(sourceEvents.map((e) => (e.client || '').trim()).filter(Boolean)).size;
+  const top = [...sourceEvents].sort((a, b) => computeTrendInsight(b).weighted - computeTrendInsight(a).weighted)[0];
+  const commTotal = Object.values(communityCountsByEvent).reduce((s, n) => s + (Number(n) || 0), 0);
+  document.getElementById('insight-added-week').textContent = `Added (7d): ${added7d}`;
+  document.getElementById('insight-active-hosts').textContent = `Active hosts: ${hosts}`;
+  document.getElementById('insight-top-event').textContent = `Top trending: ${top?.name || '—'}`;
+  document.getElementById('insight-community-total').textContent = `Community posts: ${commTotal}`;
 }
 
 function renderHostTracker(sourceEvents) {
@@ -2807,6 +3024,7 @@ async function discoverEventsNow() {
   const location = (document.getElementById('discover-location')?.value || '').trim();
   const keywords = '';
   const list = document.getElementById('discover-list');
+  const updated = document.getElementById('discover-last-updated');
   if (!location) {
     showToast('Enter your location first');
     return;
@@ -2815,9 +3033,31 @@ async function discoverEventsNow() {
   list.innerHTML = '<div class="discover-item-meta">Searching web and social trends...</div>';
 
   const interests = getInterestKeywords();
-  renderSocialPlatformLinks(location, keywords);
   const built = buildDiscoverQuery(location, keywords);
   const query = built.encoded;
+  const cacheKey = `discover-cache:${location.toLowerCase()}`;
+  const cachedRaw = localStorage.getItem(cacheKey);
+  if (cachedRaw) {
+    try {
+      const cached = JSON.parse(cachedRaw);
+      if (cached?.ts && Date.now() - cached.ts < 10 * 60 * 1000 && Array.isArray(cached.results) && cached.results.length > 0) {
+        discoveredResults = cached.results;
+        list.innerHTML = cached.results.map((r, idx) => `
+          <div class="discover-item">
+            <div class="discover-item-title">${r.title || 'Untitled'}</div>
+            <div class="discover-item-meta">${r.source} · Match score ${r.score}</div>
+            <div class="discover-actions">
+              <a class="discover-mini-btn" href="${r.link}" target="_blank" rel="noopener">Open Source</a>
+              <button class="discover-mini-btn" type="button" onclick="saveDiscoveredAsInterested(${idx})">Save as Interested</button>
+            </div>
+          </div>
+        `).join('');
+        if (updated) updated.textContent = `Last updated: ${new Date(cached.ts).toLocaleTimeString()}`;
+        showToast(`Showing cached results (${cached.results.length})`);
+        return;
+      }
+    } catch {}
+  }
   const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}`);
 
   const [newsRes] = await Promise.allSettled([
@@ -2878,6 +3118,8 @@ async function discoverEventsNow() {
     </div>
   `).join('');
   showToast(`Found ${ranked.length} trending items`);
+  if (updated) updated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+  localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), results: ranked }));
   trackEvent('discover_events_completed', { location, results: ranked.length });
 }
 
@@ -2976,6 +3218,11 @@ function setFilter(f) {
 }
 
 document.getElementById('search-input').addEventListener('input', () => renderHome());
+document.getElementById('restore-input')?.addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  await restoreEventsBackupFile(file);
+  e.target.value = '';
+});
 let discoverDebounceTimer;
 const discoverLocationInput = document.getElementById('discover-location');
 const discoverKeywordInput = document.getElementById('discover-keywords');
@@ -2995,6 +3242,7 @@ if (discoverKeywordInput) {
     discoverDebounceTimer = setTimeout(() => { discoverEventsNow(); }, 700);
   });
 }
+window.addEventListener('online', () => { flushOfflineCommunityQueue(); });
 
 function escapeAttr(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -3096,12 +3344,13 @@ function renderCommunityList(items) {
     const text = escapeHtml(it.text || '');
     const media = it.mediaUrl
       ? ((it.mediaType || '').startsWith('video/')
-        ? `<video class="community-media" src="${escapeAttr(it.mediaUrl)}" controls playsinline></video>`
-        : `<img class="community-media" src="${escapeAttr(it.mediaUrl)}" alt="">`)
+        ? `<div class="wm-media"><video class="community-media" src="${escapeAttr(it.mediaUrl)}" controls playsinline></video><span class="wm-stamp">${escapeHtml(getEventWatermarkLabel(currentEventId))}</span></div>`
+        : `<div class="wm-media"><img class="community-media" src="${escapeAttr(it.mediaUrl)}" alt=""><span class="wm-stamp">${escapeHtml(getEventWatermarkLabel(currentEventId))}</span></div>`)
       : '';
     const deleteBtn = canDeleteCommunityPost(it)
       ? `<button type="button" class="community-item-delete" onclick="deleteCommunityPost('${it.id}','${escapeAttr(it.mediaPath || '')}')">Delete</button>`
       : '';
+    const reportBtn = `<button type="button" class="community-item-delete" onclick="reportCommunityPost('${it.id}')">Report</button>`;
     return `<div class="community-item">
       <div class="community-item-head">
         <span>${name}</span>
@@ -3109,12 +3358,27 @@ function renderCommunityList(items) {
       </div>
       <div class="community-item-head">
         <span class="community-item-kind">${kind}</span>
-        ${deleteBtn}
+        <span>${reportBtn} ${deleteBtn}</span>
       </div>
       ${text ? `<div class="community-item-text">${text}</div>` : ''}
       ${media}
     </div>`;
   }).join('');
+}
+
+async function reportCommunityPost(postId) {
+  if (!firebaseReady || !firestoreDb) return showToast('Reporting unavailable offline');
+  try {
+    await firestoreDb.collection('eventCommunityReports').add({
+      postId,
+      eventId: currentEventId || '',
+      byUserId: communityUser?.uid || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Post reported');
+  } catch {
+    showToast('Could not report post');
+  }
 }
 
 async function deleteCommunityPost(postId, mediaPath) {
@@ -3174,10 +3438,19 @@ async function sendCommunityMessage(kind) {
   if (!firebaseReady || !firestoreDb) return showToast('Firebase is not configured yet');
   if (!communityUser) return showToast('Sign in first to post');
   if (!currentEventId) return;
+  if (!canSendCommunityNow()) return showToast('Too many messages. Please wait a bit.');
   const inputId = kind === 'comment' ? 'community-comment-input' : 'community-chat-input';
   const input = document.getElementById(inputId);
   const text = (input?.value || '').trim();
   if (!text) return showToast('Type a message first');
+  if (containsProfanity(text)) return showToast('Please remove offensive words and try again.');
+  if (!navigator.onLine) {
+    const q = JSON.parse(localStorage.getItem('offline-community-queue') || '[]');
+    q.push({ eventId: currentEventId, kind, text, ts: Date.now() });
+    localStorage.setItem('offline-community-queue', JSON.stringify(q.slice(-100)));
+    showToast('Offline: message queued and will sync later');
+    return;
+  }
   try {
     await firestoreDb.collection('eventCommunity').add({
       eventId: currentEventId,
@@ -3297,6 +3570,11 @@ async function openDetail(id) {
   if (dateStr) metaRows.push({ icon: '#icon-cal', color: '#FF9F0A', label: 'Date', value: dateStr + (timeRange ? ` · ${timeRange}` : '') });
   if (ev.location || gpsLocs[0]) metaRows.push({ icon: '#icon-pin', color: '#FF453A', label: 'Location', value: ev.location || gpsLocs[0] });
   if (ev.client) metaRows.push({ icon: '#icon-person', color: '#30D158', label: 'Client / Organiser', value: ev.client });
+  if (ev.hostContact) metaRows.push({ icon: '#icon-person', color: '#64D2FF', label: 'Host Contact', value: ev.hostContact });
+  if (ev.teamMembers && ev.teamMembers.length > 0) {
+    const sample = ev.teamMembers.slice(0, 4).map((m) => `${m.name || 'Member'} (${m.role || 'Role'})`).join(', ');
+    metaRows.push({ icon: '#icon-person', color: '#FFD60A', label: 'Event Team', value: `${ev.teamMembers.length} member(s): ${sample}` });
+  }
   if (photos.length > 0) metaRows.push({ icon: '#icon-photo', color: '#0A84FF', label: 'Media', value: `${photos.length} item${photos.length !== 1 ? 's' : ''}` });
   if (ev.reminders && ev.reminders.length > 0) metaRows.push({ icon: '#icon-cal', color: '#0A84FF', label: 'Reminders', value: ev.reminders.map(d => `${d}d`).join(', ') });
   if (apertures.length > 0) metaRows.push({ icon: '#icon-cam', color: '#BF5AF2', label: 'Camera', value: [apertures[0], shutters[0], isos[0] ? `ISO ${isos[0]}` : null, focals[0]].filter(Boolean).join(' · ') });
@@ -3393,19 +3671,72 @@ function openCreate() {
   navigate('create-screen');
 }
 
+function formatContactLine(contact) {
+  const name = contact?.name || '';
+  const phone = contact?.phone || '';
+  const email = contact?.email || '';
+  return [name, phone, email].filter(Boolean).join(' | ');
+}
+
+async function pickContacts(multiple = false) {
+  if (navigator.contacts && navigator.contacts.select) {
+    try {
+      const selected = await navigator.contacts.select(['name', 'tel', 'email'], { multiple });
+      return (selected || []).map((c) => ({
+        name: Array.isArray(c.name) ? (c.name[0] || '') : (c.name || ''),
+        phone: Array.isArray(c.tel) ? (c.tel[0] || '') : (c.tel || ''),
+        email: Array.isArray(c.email) ? (c.email[0] || '') : (c.email || '')
+      }));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+async function pickHostContact() {
+  const rows = await pickContacts(false);
+  if (rows.length > 0) {
+    document.getElementById('field-host-contact').value = formatContactLine(rows[0]);
+    return;
+  }
+  const manual = prompt('Enter host contact as: Name | Phone | Email');
+  if (manual) document.getElementById('field-host-contact').value = manual.trim();
+}
+
+async function pickTeamContacts() {
+  const rows = await pickContacts(true);
+  const textarea = document.getElementById('field-team-members');
+  if (rows.length > 0) {
+    const existing = (textarea.value || '').trim();
+    const lines = rows.map((r) => `${r.name || 'Contact'} | Team member | ${r.phone || r.email || ''}`);
+    textarea.value = [existing, ...lines].filter(Boolean).join('\n');
+    return;
+  }
+  const manual = prompt('Add team member as: Name | Role | Phone/Email');
+  if (!manual) return;
+  textarea.value = [textarea.value, manual.trim()].filter(Boolean).join('\n');
+}
+
 async function openEdit() {
   editMode = true;
   const ev = await dbGet(currentEventId);
   clearForm();
   document.getElementById('field-name').value = ev.name || '';
   document.getElementById('field-date').value = ev.date || '';
+  document.getElementById('field-start-time').value = ev.startTime || '';
+  document.getElementById('field-end-time').value = ev.endTime || '';
+  document.getElementById('field-timezone').value = ev.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   document.getElementById('field-location').value = ev.location || '';
   document.getElementById('field-client').value = ev.client || '';
+  document.getElementById('field-host-contact').value = ev.hostContact || '';
+  document.getElementById('field-team-members').value = (ev.teamMembers || []).map((m) => `${m.name || ''} | ${m.role || 'Team member'} | ${m.contact || ''}`.trim()).join('\n');
   document.getElementById('field-desc').value = ev.description || '';
   document.getElementById('field-tags').value = (ev.tags || []).join(', ');
   document.getElementById('field-type').value = ev.eventType || 'hosted';
+  document.getElementById('field-watermark').value = ev.watermarkLabel || '@EnuguGod';
   setReminderDaysInForm(ev.reminders || [30, 10]);
-  pickedFiles = (ev.photos || []).map(p => ({ dataUrl: p.dataUrl, exif: p.exif, mediaType: p.mediaType || 'image/*', existing: true }));
+  pickedFiles = (ev.photos || []).map(p => ({ dataUrl: p.dataUrl, exif: p.exif, mediaType: p.mediaType || 'image/*', watermarkLabel: p.watermarkLabel || ev.watermarkLabel || '@EnuguGod', existing: true }));
   renderPickedPreviews();
   updateMediaLimitsUI();
   document.getElementById('create-screen-title').textContent = 'Edit Event';
@@ -3415,14 +3746,22 @@ async function openEdit() {
 }
 
 function clearForm() {
-  ['field-name','field-date','field-location','field-client','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
+  ['field-name','field-date','field-start-time','field-end-time','field-timezone','field-location','field-client','field-host-contact','field-team-members','field-desc','field-tags'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('field-type').value = 'hosted';
+  document.getElementById('field-watermark').value = '@EnuguGod';
   setReminderDaysInForm([30, 10]);
   pickedFiles = [];
   document.getElementById('picked-previews').innerHTML = '';
   document.getElementById('photo-input').value = '';
   document.getElementById('album-input').value = '';
   updateMediaLimitsUI();
+}
+
+function clearAllPickedMedia() {
+  pickedFiles = [];
+  renderPickedPreviews();
+  updateMediaLimitsUI();
+  showToast('Cleared all selected media');
 }
 
 function cancelCreate() {
@@ -3479,7 +3818,7 @@ async function processPickedFiles(files) {
     if (exif.lat && exif.lon) {
       exif.gpsLocation = await reverseGeocode(exif.lat, exif.lon);
     }
-    pickedFiles.push({ file, dataUrl, exif, mediaType, sourceSig: sig });
+    pickedFiles.push({ file, dataUrl, exif, mediaType, watermarkLabel: getSelectedWatermarkLabel(), sourceSig: sig });
     totalBytes += file.size;
     added++;
     setImportProgress(i + 1, mediaFiles.length);
@@ -3667,16 +4006,30 @@ async function saveEvent() {
   const eventType = document.getElementById('field-type').value;
   const reminders = getReminderDaysFromForm();
 
-  const photos = pickedFiles.map(p => ({ dataUrl: p.dataUrl, exif: p.exif || {}, mediaType: p.mediaType || 'image/*' }));
+  const selectedWatermark = getSelectedWatermarkLabel();
+  const photos = pickedFiles.map(p => ({ dataUrl: p.dataUrl, exif: p.exif || {}, mediaType: p.mediaType || 'image/*', watermarkLabel: p.watermarkLabel || selectedWatermark }));
 
   const ev = {
     id: editMode ? currentEventId : ('ev_' + Date.now()),
     name,
     date,
+    startTime: document.getElementById('field-start-time').value || '',
+    endTime: document.getElementById('field-end-time').value || '',
+    timezone: document.getElementById('field-timezone').value.trim() || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     location,
     client: document.getElementById('field-client').value.trim(),
+    hostContact: document.getElementById('field-host-contact').value.trim(),
+    teamMembers: (document.getElementById('field-team-members').value || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [name = '', role = 'Team member', contact = ''] = line.split('|').map((x) => x.trim());
+        return { name, role, contact };
+      }),
     description: document.getElementById('field-desc').value.trim(),
     eventType,
+    watermarkLabel: selectedWatermark,
     reminders,
     tags,
     photos,
@@ -3741,11 +4094,12 @@ async function getCurrentEvent() {
 
 function openGoogleCalendarForEvent(ev) {
   if (!ev || !ev.date) { showToast('Add a date first to sync calendar'); return; }
-  const start = `${ev.date.replace(/-/g, '')}T090000`;
-  const endDate = new Date(`${ev.date}T09:00:00`);
-  endDate.setHours(endDate.getHours() + 2);
-  const end = `${toLocalIsoDate(endDate).replace(/-/g, '')}T110000`;
-  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.name || 'Event')}&dates=${start}/${end}&details=${encodeURIComponent(ev.description || '')}&location=${encodeURIComponent(ev.location || '')}`;
+  const startTime = (ev.startTime || '09:00').replace(':', '') + '00';
+  const endTime = (ev.endTime || '11:00').replace(':', '') + '00';
+  const start = `${ev.date.replace(/-/g, '')}T${startTime}`;
+  const end = `${ev.date.replace(/-/g, '')}T${endTime}`;
+  const ctz = encodeURIComponent(ev.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.name || 'Event')}&dates=${start}/${end}&details=${encodeURIComponent(ev.description || '')}&location=${encodeURIComponent(ev.location || '')}&ctz=${ctz}`;
   window.open(url, '_blank', 'noopener');
 }
 
@@ -3794,6 +4148,7 @@ function eventSummaryLines(ev) {
   return [
     `Type: ${ev.eventType === 'interested' ? 'Interested' : 'Hosted'}`,
     `Date: ${ev.date || 'N/A'}`,
+    `Time: ${ev.startTime || '09:00'} - ${ev.endTime || '11:00'} (${ev.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'})`,
     `Location: ${ev.location || 'N/A'}`,
     `Host: ${ev.client || 'N/A'}`,
     `Trend: ${trend.status} (${trend.engagementRate}% ER)`,
@@ -3939,12 +4294,89 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+function exportEventsBackup() {
+  try {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      app: 'EventCata',
+      events: allEvents || []
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `eventcata-backup-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Backup exported');
+  } catch {
+    showToast('Could not export backup');
+  }
+}
+
+async function restoreEventsBackupFile(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const items = Array.isArray(data?.events) ? data.events : [];
+    if (items.length === 0) return showToast('No events found in backup');
+    for (const ev of items) {
+      if (!ev?.id) continue;
+      await dbPut(ev);
+    }
+    allEvents = await dbAll();
+    renderHome();
+    showToast(`Restored ${items.length} event(s)`);
+  } catch {
+    showToast('Could not restore backup');
+  }
+}
+
+async function flushOfflineCommunityQueue() {
+  if (!firebaseReady || !firestoreDb || !communityUser) return;
+  const q = JSON.parse(localStorage.getItem('offline-community-queue') || '[]');
+  if (!Array.isArray(q) || q.length === 0) return;
+  const remaining = [];
+  for (const item of q) {
+    try {
+      await firestoreDb.collection('eventCommunity').add({
+        eventId: item.eventId,
+        kind: item.kind || 'chat',
+        text: item.text || '',
+        mediaUrl: '',
+        mediaType: '',
+        userId: communityUser.uid,
+        userName: communityUser.displayName || communityUser.email || 'User',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch {
+      remaining.push(item);
+    }
+  }
+  localStorage.setItem('offline-community-queue', JSON.stringify(remaining));
+  if (q.length !== remaining.length) showToast(`Synced ${q.length - remaining.length} offline post(s)`);
+}
 </script>
 
 <!-- PWA manifest inline -->
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(console.error);
+  navigator.serviceWorker.register('/sw.js').then((reg) => {
+    if (reg.waiting) showStickyNotice('A new app version is ready. Refresh to update.');
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          showStickyNotice('A new app version is ready. Refresh to update.');
+        }
+      });
+    });
+  }).catch(console.error);
 }
 </script>
 </body>
