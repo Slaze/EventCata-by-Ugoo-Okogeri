@@ -658,6 +658,44 @@ textarea.form-input {
 .stat-num { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 1px; }
 
+/* ─── INSTALL HELPER ─── */
+.install-helper {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  display: none;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.install-helper.show { display: flex; }
+.install-helper-text {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.35;
+}
+.install-helper-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.install-helper-btn {
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.install-helper-btn.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ─── TOAST ─── */
 .toast {
   position: fixed;
@@ -716,6 +754,13 @@ textarea.form-input {
     </div>
   </div>
   <div class="scroll" id="home-scroll">
+    <div class="install-helper" id="install-helper">
+      <div class="install-helper-text" id="install-helper-text"></div>
+      <div class="install-helper-actions">
+        <button class="install-helper-btn primary" id="install-helper-action" type="button">Install</button>
+        <button class="install-helper-btn" id="install-helper-dismiss" type="button">Later</button>
+      </div>
+    </div>
     <div class="search-wrap">
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -1056,6 +1101,63 @@ let editMode = false;
 let pickedFiles = []; // {file, dataUrl, exif, mediaType}
 let lbPhotos = [], lbIndex = 0;
 let activeFilter = 'all';
+let deferredInstallPrompt = null;
+
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function hideInstallHelper() {
+  const helper = document.getElementById('install-helper');
+  helper.classList.remove('show');
+  localStorage.setItem('install-helper-dismissed', '1');
+}
+
+function showInstallHelper(text, actionLabel, actionHandler) {
+  const helper = document.getElementById('install-helper');
+  const textEl = document.getElementById('install-helper-text');
+  const actionBtn = document.getElementById('install-helper-action');
+  const dismissBtn = document.getElementById('install-helper-dismiss');
+
+  textEl.textContent = text;
+  actionBtn.textContent = actionLabel;
+  actionBtn.onclick = actionHandler;
+  dismissBtn.onclick = hideInstallHelper;
+  helper.classList.add('show');
+}
+
+function initInstallHelper() {
+  if (isStandaloneMode() || localStorage.getItem('install-helper-dismissed') === '1') return;
+
+  if (isIos()) {
+    showInstallHelper(
+      'Install app: tap Share, then Add to Home Screen.',
+      'How',
+      () => showToast('Safari: Share -> Add to Home Screen')
+    );
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallHelper('Install EventCata for quick access.', 'Install', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') hideInstallHelper();
+      deferredInstallPrompt = null;
+    });
+  });
+
+  window.addEventListener('appinstalled', () => {
+    hideInstallHelper();
+    showToast('EventCata installed');
+  });
+}
 
 function isVideoMedia(item) {
   return (item?.mediaType || '').startsWith('video/');
@@ -1109,6 +1211,7 @@ function matchesDateQuery(rawDate, query) {
 openDB().then(async () => {
   allEvents = await dbAll();
   renderHome();
+  initInstallHelper();
 });
 
 // ══════════════════════════════════════════
