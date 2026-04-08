@@ -1,7 +1,7 @@
 {
-  "name": "EventCatabyUgooOkogeri",
+  "name": "EventCata by Ugoo Okogeri",
   "short_name": "EventCata",
-  "start_url": "/EventCatabyUgooOkogeri.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
