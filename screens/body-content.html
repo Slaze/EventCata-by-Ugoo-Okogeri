@@ -436,7 +436,9 @@
 <div class="map-sheet" id="map-sheet" onclick="dismissMapSheet()">
   <div class="map-sheet-card" onclick="event.stopPropagation()">
     <div class="map-sheet-grab"></div>
-    <div class="map-sheet-title">Open Navigation With</div>
+    <div class="map-sheet-title" id="map-sheet-title">Open Navigation With</div>
+    <div class="map-sheet-subtitle" id="map-sheet-subtitle">Select a map provider</div>
+    <div class="map-sheet-preview" id="map-sheet-preview"></div>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('apple')">Apple Maps</button>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('google')">Google Maps</button>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('osm')">OpenStreetMap</button>

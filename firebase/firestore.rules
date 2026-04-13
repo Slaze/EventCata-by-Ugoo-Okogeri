@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isEventOwner(eventId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/events/$(eventId)) &&
+        get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid;
+    }
+
+    function isPublicEvent(eventId) {
+      return exists(/databases/$(database)/documents/events/$(eventId)) &&
+        get(/databases/$(database)/documents/events/$(eventId)).data.visibility == 'public';
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid);
+      allow update, delete: if isOwner(uid);
+    }
+
+    match /events/{eventId} {
+      allow read: if resource.data.visibility == 'public' ||
+        (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
+    match /events/{eventId}/posts/{postId} {
+      allow read: if isPublicEvent(eventId) || isEventOwner(eventId);
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() &&
+        (request.auth.uid == resource.data.authorId || isEventOwner(eventId));
+    }
+
+    match /events/{eventId}/attendees/{uid} {
+      allow read: if isPublicEvent(eventId) || isEventOwner(eventId);
+      allow create, update, delete: if isOwner(uid);
+    }
+
+    match /events/{eventId}/tickets/{ticketId} {
+      allow read: if isEventOwner(eventId) || (isSignedIn() && resource.data.buyerId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isEventOwner(eventId);
+      allow delete: if false;
+    }
+
+    match /follows/{uid}/following/{targetUid} {
+      allow read: if isOwner(uid);
+      allow create, delete: if isOwner(uid);
+      allow update: if false;
+    }
+
+    match /feeds/{uid}/items/{itemId} {
+      allow read: if isOwner(uid);
+      allow write: if false; // server-only via Cloud Functions/Admin SDK
+    }
+  }
+}
