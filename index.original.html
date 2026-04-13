@@ -304,7 +304,7 @@ body::before {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: var(--glass), var(--surface);
+  background: linear-gradient(180deg, rgba(10,132,255,0.10), rgba(10,132,255,0.05)), var(--glass), var(--surface);
   box-shadow: var(--elev-1);
 }
 .session-meta-title {
@@ -350,6 +350,19 @@ body::before {
   flex: 1;
 }
 .search-bar input::placeholder { color: var(--text2); }
+
+.search-btn {
+  border: 1px solid rgba(10,132,255,0.35);
+  background: rgba(10,132,255,0.12);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-btn:active { transform: translateY(1px); }
 
 /* ─── FILTER PILLS ─── */
 .filter-row {
@@ -1126,6 +1139,22 @@ textarea.form-input {
   background: rgba(255,255,255,0.24);
 }
 .map-sheet-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.map-sheet-subtitle {
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.map-sheet-preview {
+  width: 100%;
+  height: 38vh;
+  min-height: 220px;
+  max-height: 360px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: #0a0f1a;
+  margin-bottom: 8px;
+}
 .map-sheet-btn {
   width: 100%;
   margin-top: 8px;
@@ -1771,6 +1800,7 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <input type="text" id="search-input" placeholder="Search by name, sponsor, or date…">
+        <button class="search-btn" type="button" onclick="renderHome()" aria-label="Search">Search</button>
       </div>
     </div>
     <div class="toolbar-row">
@@ -1782,8 +1812,7 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
       </select>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-media" onchange="renderHome()">Has media</label>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-community" onchange="renderHome()">Has community</label>
-      <label class="toolbar-check"><input type="checkbox" id="ui-sound-toggle">UI sounds</label>
-      <label class="toolbar-check"><input type="checkbox" id="phone-notify-toggle">Phone notify</label>
+      <!-- UI sounds + phone notifications are always-on (no user toggle) -->
     </div>
 
     <div class="filter-row" id="filter-row">
@@ -1804,15 +1833,7 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
         <div class="insight-mini" id="insight-community-total">Community posts: 0</div>
       </div>
     </div>
-    <div class="insights-card" id="ticket-insights-card">
-      <div class="insights-title">Ticket Sales Dashboard</div>
-      <div class="insights-grid">
-        <div class="insight-mini" id="insight-ticket-sold">Tickets sold: 0</div>
-        <div class="insight-mini" id="insight-ticket-buyers">Registered buyers: 0</div>
-        <div class="insight-mini" id="insight-ticket-revenue">Est. revenue: NGN 0</div>
-        <div class="insight-mini" id="insight-ticket-top-event">Top sales event: —</div>
-      </div>
-    </div>
+    <!-- Ticket Sales Dashboard moved to Admin drawer -->
     <div class="event-map-wrap" id="event-map-wrap">
       <div class="event-map-title">Event Locations (Live Map)</div>
       <div class="event-map-grid">
@@ -1876,7 +1897,7 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
 
     <div class="admin-lock-wrap show" id="admin-lock-wrap">
       <button class="admin-btn" type="button" onclick="unlockAdmin()">Verify with Passkey</button>
-      <button class="admin-btn" type="button" onclick="setupOwnerPasskey()">Setup Owner Passkey</button>
+      <button class="admin-btn" id="setup-owner-passkey-btn" type="button" onclick="setupOwnerPasskey()">Setup Owner Passkey</button>
     </div>
 
     <div class="admin-actions" id="admin-actions">
@@ -1884,7 +1905,18 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
         <div class="admin-section-title">System</div>
         <button class="admin-btn" type="button" onclick="exportEventsBackup()">Export Backup</button>
         <button class="admin-btn" type="button" onclick="document.getElementById('restore-input').click()">Restore Backup</button>
-        <button class="admin-btn" type="button" onclick="authorizeAdditionalPasskey()">Authorize Another Passkey</button>
+      </div>
+      <div class="admin-section" id="admin-ticket-section">
+        <div class="admin-section-title">Insights</div>
+        <div class="insights-card" id="ticket-insights-card">
+          <div class="insights-title">Ticket Sales Dashboard</div>
+          <div class="insights-grid">
+            <div class="insight-mini" id="insight-ticket-sold">Tickets sold: 0</div>
+            <div class="insight-mini" id="insight-ticket-buyers">Registered buyers: 0</div>
+            <div class="insight-mini" id="insight-ticket-revenue">Est. revenue: NGN 0</div>
+            <div class="insight-mini" id="insight-ticket-top-event">Top sales event: —</div>
+          </div>
+        </div>
       </div>
       <div class="admin-section">
         <div class="admin-section-title">Developer</div>
@@ -2167,7 +2199,9 @@ button, .pill, .event-card, .detail-action-btn, .ops-btn, .community-btn, .nav-b
 <div class="map-sheet" id="map-sheet" onclick="dismissMapSheet()">
   <div class="map-sheet-card" onclick="event.stopPropagation()">
     <div class="map-sheet-grab"></div>
-    <div class="map-sheet-title">Open Navigation With</div>
+    <div class="map-sheet-title" id="map-sheet-title">Open Navigation With</div>
+    <div class="map-sheet-subtitle" id="map-sheet-subtitle">Select a map provider</div>
+    <div class="map-sheet-preview" id="map-sheet-preview"></div>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('apple')">Apple Maps</button>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('google')">Google Maps</button>
     <button class="map-sheet-btn" type="button" onclick="pickMapProvider('osm')">OpenStreetMap</button>
@@ -2506,15 +2540,21 @@ async function renderEventMap(sourceEvents) {
   initEventMapIfNeeded();
 
   const mapped = (await Promise.all(events.map(async (ev) => {
-    const geo = await geocodeVenueAddress(ev.location);
+    const geo = ev.geo && Number.isFinite(ev.geo.lat) && Number.isFinite(ev.geo.lon)
+      ? ev.geo
+      : await geocodeVenueAddress(ev.location);
     if (!geo || !Number.isFinite(geo.lat) || !Number.isFinite(geo.lon)) return null;
+    if (!ev.geo) {
+      ev.geo = { lat: geo.lat, lon: geo.lon, source: 'geocode', updatedAt: Date.now() };
+      dbPut(ev).catch(() => {});
+    }
     return { ev, lat: geo.lat, lon: geo.lon };
   }))).filter(Boolean);
 
   list.innerHTML = mapped.length === 0
     ? '<div class="event-map-item">No mappable venues yet. Add clearer venue locations.</div>'
     : mapped.map((m) => `
-      <div class="event-map-item" onclick="openDetail('${m.ev.id}')">
+      <div class="event-map-item" onclick="openMapForEvent('${m.ev.id}')">
         <b>${escapeHtml(m.ev.name || 'Untitled')}</b>
         ${escapeHtml(m.ev.location || '')}
       </div>
@@ -2540,6 +2580,22 @@ async function renderEventMap(sourceEvents) {
   });
   if (mapped.length === 1) eventMap.easeTo({ center: [mapped[0].lon, mapped[0].lat], zoom: 12.4, pitch: 58, bearing: -18, duration: 700 });
   else if (!bounds.isEmpty()) eventMap.fitBounds(bounds, { padding: 40, duration: 900, maxZoom: 13.2 });
+
+  const canvas = document.getElementById('event-map-canvas');
+  if (canvas && !canvas.dataset.boundTap) {
+    canvas.dataset.boundTap = '1';
+    canvas.addEventListener('click', () => {
+      if (!mapped.length) return;
+      const first = mapped[0];
+      mapSheetPreviewGeo = {
+        lat: first.lat,
+        lon: first.lon,
+        name: first.ev.name || 'Event',
+        location: first.ev.location || ''
+      };
+      showMapSheet();
+    });
+  }
 }
 
 // ══════════════════════════════════════════
@@ -2565,12 +2621,15 @@ const COMMUNITY_ADMIN_EMAILS = []; // optional: add admin emails that can delete
 const PROFANITY_WORDS = ['fuck', 'shit', 'bitch', 'asshole', 'bastard'];
 const communitySendTimes = [];
 let swReady = null;
-let uiSoundEnabled = localStorage.getItem('ui-sound-enabled') !== '0';
+let uiSoundEnabled = true;
 let uiAudioCtx = null;
-let phoneNotifyEnabled = localStorage.getItem('phone-notify-enabled') === '1';
+let phoneNotifyEnabled = ('Notification' in window) && Notification.permission === 'granted';
 let detailDistanceTimer = null;
 let eventMap = null;
 let eventMapMarkers = [];
+let mapSheetMap = null;
+let mapSheetMapMarker = null;
+let mapSheetPreviewGeo = null;
 let mapSheetResolver = null;
 let adminVerifiedUntil = 0;
 const ADMIN_PASSKEYS_KEY = 'admin-passkeys';
@@ -2593,16 +2652,6 @@ function trackEvent(name, params = {}) {
 }
 
 function initUiSounds() {
-  const toggle = document.getElementById('ui-sound-toggle');
-  if (toggle) {
-    toggle.checked = uiSoundEnabled;
-    toggle.addEventListener('change', () => {
-      uiSoundEnabled = !!toggle.checked;
-      localStorage.setItem('ui-sound-enabled', uiSoundEnabled ? '1' : '0');
-      if (uiSoundEnabled) unlockUiAudio();
-    });
-  }
-
   document.addEventListener('pointerdown', unlockUiAudio, { passive: true });
   document.addEventListener('click', (e) => {
     if (!uiSoundEnabled) return;
@@ -2733,7 +2782,10 @@ function refreshAdminDrawerUI() {
   const actions = document.getElementById('admin-actions');
   const chip = document.getElementById('admin-lock-chip');
   const sub = document.getElementById('admin-subtext');
+  const setupBtn = document.getElementById('setup-owner-passkey-btn');
   if (!lockWrap || !actions || !chip || !sub) return;
+  const hasOwnerPasskey = getStoredAdminPasskeys().length > 0;
+  if (setupBtn) setupBtn.style.display = hasOwnerPasskey ? 'none' : '';
   const unlocked = isAdminUnlocked();
   lockWrap.classList.toggle('show', !unlocked);
   actions.classList.toggle('show', unlocked);
@@ -2749,6 +2801,11 @@ async function setupOwnerPasskey() {
     showToast('Passkeys require HTTPS and a supported browser.');
     return;
   }
+  const existing = getStoredAdminPasskeys();
+  if (existing.length > 0) {
+    showToast('Owner passkey already set (one-time setup).');
+    return;
+  }
   try {
     const username = (prompt('Owner label (e.g. Ugoo)') || 'Owner').trim() || 'Owner';
     const cred = await navigator.credentials.create({
@@ -2761,7 +2818,12 @@ async function setupOwnerPasskey() {
           displayName: username
         },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-        authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          residentKey: 'required',
+          requireResidentKey: true,
+          userVerification: 'required'
+        },
         timeout: 60000,
         attestation: 'none'
       }
@@ -2807,12 +2869,7 @@ async function unlockAdmin() {
 }
 
 async function authorizeAdditionalPasskey() {
-  if (!isAdminUnlocked()) {
-    showToast('Unlock admin first');
-    refreshAdminDrawerUI();
-    return;
-  }
-  await setupOwnerPasskey();
+  showToast('Owner passkey setup is one-time only.');
 }
 
 function syncOfflineNow() {
@@ -2924,31 +2981,9 @@ async function clearAllLocalDataNow() {
 }
 
 function initPhoneNotifications() {
-  const toggle = document.getElementById('phone-notify-toggle');
-  if (!toggle) return;
-  const supported = 'Notification' in window;
-  toggle.checked = supported && phoneNotifyEnabled;
-  toggle.disabled = !supported;
-  if (!supported) return;
-
-  toggle.addEventListener('change', async () => {
-    if (!toggle.checked) {
-      phoneNotifyEnabled = false;
-      localStorage.setItem('phone-notify-enabled', '0');
-      return;
-    }
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-      phoneNotifyEnabled = true;
-      localStorage.setItem('phone-notify-enabled', '1');
-      showToast('Phone notifications enabled');
-    } else {
-      phoneNotifyEnabled = false;
-      localStorage.setItem('phone-notify-enabled', '0');
-      toggle.checked = false;
-      showToast('Notification permission denied');
-    }
-  });
+  // Always-on by design. Browser permission prompts require a user gesture;
+  // we respect that and just use notifications when permission is already granted.
+  phoneNotifyEnabled = ('Notification' in window) && Notification.permission === 'granted';
 }
 
 async function sendPhoneNotification(title, body) {
@@ -3132,6 +3167,12 @@ function getDaysToEvent(eventDate) {
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const target = new Date(`${eventDate}T00:00:00`);
   return Math.round((target - startOfToday) / 86400000);
+}
+
+function isPastEvent(ev) {
+  if (!ev?.date) return false;
+  const daysTo = getDaysToEvent(ev.date);
+  return daysTo !== null && daysTo < 0;
 }
 
 function checkDueReminders() {
@@ -4041,13 +4082,17 @@ function renderSuccessChart(sourceEvents) {
     .slice(0, 8);
 
   const top = ranked[0] ? ranked[0].score : 0;
+  const median = ranked.length ? ranked[Math.floor((ranked.length - 1) / 2)].score : 0;
   list.innerHTML = ranked.map(({ ev, score }) => {
     const width = top > 0 ? Math.max(6, Math.round((score / top) * 100)) : 6;
+    const rel = top > 0 ? Math.round((score / top) * 100) : 0;
+    const delta = score - median;
+    const deltaLabel = delta === 0 ? 'median' : `${delta > 0 ? '+' : ''}${delta}`;
     return `
       <div class="success-row" onclick="openDetail('${ev.id}')">
         <div class="success-row-head">
           <div class="success-row-name">${escapeHtml(ev.name || 'Untitled event')}</div>
-          <div class="success-row-score">${score}/100</div>
+          <div class="success-row-score">${rel}% · ${deltaLabel}</div>
         </div>
         <div class="success-bar"><div class="success-bar-fill" style="width:${width}%"></div></div>
       </div>
@@ -4309,7 +4354,7 @@ function renderUpcomingSlider(sourceEvents) {
   const wrap = document.getElementById('upcoming-slider-wrap');
   const track = document.getElementById('upcoming-slider-track');
   const upcoming = (sourceEvents || [])
-    .filter((e) => e.date && getDaysToEvent(e.date) !== null && getDaysToEvent(e.date) >= 0)
+    .filter((e) => e.date && !isPastEvent(e))
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     .slice(0, 12);
 
@@ -4356,6 +4401,7 @@ function renderCard(ev) {
   const trend = computeTrendInsight(ev);
   const communityCount = communityCountsByEvent[ev.id] || 0;
   const distanceBadge = (window.__distanceBadgeCache && window.__distanceBadgeCache[ev.id]) ? window.__distanceBadgeCache[ev.id] : '';
+  const lifecycleLabel = isPastEvent(ev) ? 'Past' : (ev.eventType === 'interested' ? 'Interested' : 'Hosted');
 
   // Get earliest camera time from EXIF
   let timeStr = '';
@@ -4376,7 +4422,7 @@ function renderCard(ev) {
     <div class="card-body">
       <div class="card-title">${ev.name || 'Untitled Event'}</div>
       <div class="card-meta">
-        <div class="meta-item">${ev.eventType === 'interested' ? 'Interested' : 'Hosted'}</div>
+        <div class="meta-item">${lifecycleLabel}</div>
         <div class="meta-item">${trend.status}</div>
         <div class="community-count-badge" data-community-badge="${ev.id}">${communityCount} community</div>
         ${distanceBadge ? `<div class="distance-badge">${distanceBadge} away</div>` : ''}
@@ -5483,7 +5529,30 @@ async function sendSmsReminderForCurrentEvent() {
 function showMapSheet(defaultProvider = 'google') {
   const sheet = document.getElementById('map-sheet');
   if (!sheet) return Promise.resolve(defaultProvider);
+  const title = document.getElementById('map-sheet-title');
+  const subtitle = document.getElementById('map-sheet-subtitle');
+  if (title) title.textContent = mapSheetPreviewGeo?.name ? `Navigate: ${mapSheetPreviewGeo.name}` : 'Open Navigation With';
+  if (subtitle) subtitle.textContent = mapSheetPreviewGeo?.location || 'Select a map provider';
+  if (window.maplibregl && mapSheetPreviewGeo?.lat && mapSheetPreviewGeo?.lon) {
+    if (!mapSheetMap) {
+      mapSheetMap = new maplibregl.Map({
+        container: 'map-sheet-preview',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [mapSheetPreviewGeo.lon, mapSheetPreviewGeo.lat],
+        zoom: 13,
+        pitch: 35,
+        attributionControl: false
+      });
+      mapSheetMap.addControl(new maplibregl.NavigationControl({ showCompass: true, showZoom: true }), 'top-right');
+    } else {
+      mapSheetMap.resize();
+      mapSheetMap.easeTo({ center: [mapSheetPreviewGeo.lon, mapSheetPreviewGeo.lat], zoom: 13, duration: 350 });
+    }
+    if (mapSheetMapMarker) mapSheetMapMarker.remove();
+    mapSheetMapMarker = new maplibregl.Marker().setLngLat([mapSheetPreviewGeo.lon, mapSheetPreviewGeo.lat]).addTo(mapSheetMap);
+  }
   sheet.classList.add('show');
+  setTimeout(() => { try { mapSheetMap?.resize(); } catch {} }, 80);
   return new Promise((resolve) => {
     mapSheetResolver = resolve;
   });
@@ -5526,11 +5595,30 @@ async function openMapForCurrentEvent() {
     googleUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodedDest}&travelmode=driving`;
     appleUrl = `maps://?saddr=${origin}&daddr=${encodedDest}&dirflg=d`;
   } catch {}
+  try {
+    const geo = ev.geo && Number.isFinite(ev.geo.lat) && Number.isFinite(ev.geo.lon)
+      ? ev.geo
+      : await geocodeVenueAddress(ev.location);
+    if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
+      if (!ev.geo) {
+        ev.geo = { lat: geo.lat, lon: geo.lon, source: 'geocode', updatedAt: Date.now() };
+        dbPut(ev).catch(() => {});
+      }
+      mapSheetPreviewGeo = { lat: geo.lat, lon: geo.lon, name: ev.name || 'Event', location: ev.location || '' };
+    }
+  } catch {}
   const pick = await showMapSheet(isIosDevice ? 'apple' : 'google');
   if (pick === 'cancel') return;
   if (pick === 'osm') return window.open(osmSearch, '_blank', 'noopener');
   if (pick === 'apple' || (isIosDevice && pick !== 'google')) return window.location.href = appleUrl;
   window.open(googleUrl, '_blank', 'noopener');
+}
+
+async function openMapForEvent(eventId) {
+  const ev = await dbGet(eventId);
+  if (!ev) return;
+  currentEventId = ev.id;
+  await openMapForCurrentEvent();
 }
 
 function openGoogleCalendarForEvent(ev) {

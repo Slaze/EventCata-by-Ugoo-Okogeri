@@ -38,6 +38,7 @@
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <input type="text" id="search-input" placeholder="Search by name, sponsor, or date…">
+        <button class="search-btn" type="button" onclick="renderHome()" aria-label="Search">Search</button>
       </div>
     </div>
     <div class="toolbar-row">
@@ -49,8 +50,7 @@
       </select>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-media" onchange="renderHome()">Has media</label>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-community" onchange="renderHome()">Has community</label>
-      <label class="toolbar-check"><input type="checkbox" id="ui-sound-toggle">UI sounds</label>
-      <label class="toolbar-check"><input type="checkbox" id="phone-notify-toggle">Phone notify</label>
+      <!-- UI sounds + phone notifications are always-on (no user toggle) -->
     </div>
 
     <div class="filter-row" id="filter-row">
@@ -71,15 +71,7 @@
         <div class="insight-mini" id="insight-community-total">Community posts: 0</div>
       </div>
     </div>
-    <div class="insights-card" id="ticket-insights-card">
-      <div class="insights-title">Ticket Sales Dashboard</div>
-      <div class="insights-grid">
-        <div class="insight-mini" id="insight-ticket-sold">Tickets sold: 0</div>
-        <div class="insight-mini" id="insight-ticket-buyers">Registered buyers: 0</div>
-        <div class="insight-mini" id="insight-ticket-revenue">Est. revenue: NGN 0</div>
-        <div class="insight-mini" id="insight-ticket-top-event">Top sales event: —</div>
-      </div>
-    </div>
+    <!-- Ticket Sales Dashboard moved to Admin drawer -->
     <div class="event-map-wrap" id="event-map-wrap">
       <div class="event-map-title">Event Locations (Live Map)</div>
       <div class="event-map-grid">
@@ -143,7 +135,7 @@
 
     <div class="admin-lock-wrap show" id="admin-lock-wrap">
       <button class="admin-btn" type="button" onclick="unlockAdmin()">Verify with Passkey</button>
-      <button class="admin-btn" type="button" onclick="setupOwnerPasskey()">Setup Owner Passkey</button>
+      <button class="admin-btn" id="setup-owner-passkey-btn" type="button" onclick="setupOwnerPasskey()">Setup Owner Passkey</button>
     </div>
 
     <div class="admin-actions" id="admin-actions">
@@ -151,7 +143,18 @@
         <div class="admin-section-title">System</div>
         <button class="admin-btn" type="button" onclick="exportEventsBackup()">Export Backup</button>
         <button class="admin-btn" type="button" onclick="document.getElementById('restore-input').click()">Restore Backup</button>
-        <button class="admin-btn" type="button" onclick="authorizeAdditionalPasskey()">Authorize Another Passkey</button>
+      </div>
+      <div class="admin-section" id="admin-ticket-section">
+        <div class="admin-section-title">Insights</div>
+        <div class="insights-card" id="ticket-insights-card">
+          <div class="insights-title">Ticket Sales Dashboard</div>
+          <div class="insights-grid">
+            <div class="insight-mini" id="insight-ticket-sold">Tickets sold: 0</div>
+            <div class="insight-mini" id="insight-ticket-buyers">Registered buyers: 0</div>
+            <div class="insight-mini" id="insight-ticket-revenue">Est. revenue: NGN 0</div>
+            <div class="insight-mini" id="insight-ticket-top-event">Top sales event: —</div>
+          </div>
+        </div>
       </div>
       <div class="admin-section">
         <div class="admin-section-title">Developer</div>
