@@ -1,6 +1,6 @@
 <div class="app-splash" id="app-splash">
   <div class="app-splash-card">
-    <div class="app-splash-title">EventCata by Ugoo Okogeri</div>
+    <div class="app-splash-title">EventCata</div>
     <div class="app-splash-loader" aria-label="Loading"></div>
   </div>
 </div>
@@ -29,19 +29,16 @@
         <button class="install-helper-btn" id="install-helper-dismiss" type="button">Later</button>
       </div>
     </div>
-    <div class="session-meta" id="session-meta">
-      <div class="session-meta-title">Current Session</div>
-      <div class="session-meta-value" id="session-meta-value">Getting your time, date, and location...</div>
-      <div class="session-meta-updated" id="session-meta-updated">Last updated: just now</div>
-    </div>
+    <div id="events-list"></div>
+    <div id="home-chrome" class="home-chrome" hidden>
     <div class="search-wrap">
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" id="search-input" placeholder="Search by name, sponsor, or date…">
+        <input type="text" id="search-input" placeholder="Search your catalogue…">
         <button class="search-btn" type="button" onclick="renderHome()" aria-label="Search">Search</button>
       </div>
     </div>
-    <div class="toolbar-row">
+    <div class="toolbar-row ops-hidden" hidden>
       <select id="sort-mode" class="toolbar-select" onchange="renderHome()">
         <option value="date_desc">Newest date</option>
         <option value="date_asc">Oldest date</option>
@@ -50,11 +47,17 @@
       </select>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-media" onchange="renderHome()">Has media</label>
       <label class="toolbar-check"><input type="checkbox" id="filter-has-community" onchange="renderHome()">Has community</label>
-      <!-- UI sounds + phone notifications are always-on (no user toggle) -->
     </div>
 
     <div class="filter-row" id="filter-row">
       <div class="pill active" data-filter="all">All</div>
+    </div>
+    </div>
+
+    <div class="session-meta ops-hidden" id="session-meta" hidden>
+      <div class="session-meta-title">Current Session</div>
+      <div class="session-meta-value" id="session-meta-value">Getting your time, date, and location...</div>
+      <div class="session-meta-updated" id="session-meta-updated">Last updated: just now</div>
     </div>
 
     <div class="stats-bar" id="stats-bar" style="display:none">
@@ -62,7 +65,7 @@
       <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label">Media</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-years">0</div><div class="stat-label">Years</div></div>
     </div>
-    <div class="insights-card" id="insights-card">
+    <div class="insights-card ops-hidden" id="insights-card" hidden>
       <div class="insights-title">Mini Dashboard</div>
       <div class="insights-grid">
         <div class="insight-mini" id="insight-added-week">Added (7d): 0</div>
@@ -71,8 +74,7 @@
         <div class="insight-mini" id="insight-community-total">Community posts: 0</div>
       </div>
     </div>
-    <!-- Ticket Sales Dashboard moved to Admin drawer -->
-    <div class="event-map-wrap" id="event-map-wrap">
+    <div class="event-map-wrap ops-hidden" id="event-map-wrap" hidden>
       <div class="event-map-title">Event Locations (Live Map)</div>
       <div class="event-map-grid">
         <div class="event-map-canvas" id="event-map-canvas"></div>
@@ -80,7 +82,7 @@
       </div>
     </div>
 
-    <div class="success-wrap" id="success-chart-wrap">
+    <div class="success-wrap ops-hidden" id="success-chart-wrap" hidden>
       <div class="success-title">Event Success Snapshot</div>
       <div class="success-subtitle">Composite score from engagement, trend status, media depth, and recency</div>
       <select id="success-metric-toggle" class="success-toggle" onchange="onSuccessMetricChange()">
@@ -94,13 +96,13 @@
 
     <div class="upcoming-wrap" id="upcoming-slider-wrap">
       <div class="upcoming-header">
-        <div class="upcoming-title">Upcoming Events</div>
-        <div class="upcoming-subtitle">Hosted + Interested</div>
+        <div class="upcoming-title">Upcoming</div>
+        <div class="upcoming-subtitle">On this phone</div>
       </div>
       <div class="upcoming-slider" id="upcoming-slider-track"></div>
     </div>
 
-    <div class="host-wrap" id="host-tracker-wrap">
+    <div class="host-wrap ops-hidden" id="host-tracker-wrap" hidden>
       <div class="host-header">
         <div class="host-title">Host Tracker</div>
         <div class="host-subtitle">Past + Next by host</div>
@@ -108,7 +110,7 @@
       <div class="host-list" id="host-tracker-list"></div>
     </div>
 
-    <div class="discover-wrap">
+    <div class="discover-wrap ops-hidden" hidden>
       <div class="discover-title">Discover Trending Events Near You</div>
       <div class="discover-row">
         <input id="discover-location" class="discover-input" type="text" placeholder="Location keywords (state, city, town)">
@@ -118,11 +120,9 @@
       <div class="discover-item-meta" id="discover-last-updated"></div>
       <div class="discover-list" id="discover-list"></div>
     </div>
-
-    <div id="events-list"></div>
   </div>
 
-  <button class="fab" id="fab-add" onclick="openCreate()">
+  <button class="fab" id="fab-add" onclick="openCreate()" aria-label="New event">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 </div>
@@ -195,6 +195,21 @@
       <div class="detail-title" id="detail-title"></div>
       <div class="detail-desc" id="detail-desc"></div>
       <div class="meta-card" id="detail-meta-card"></div>
+      <div class="rsvp-row" id="rsvp-row" role="group" aria-label="Your RSVP">
+        <button type="button" class="rsvp-pill" id="rsvp-going" onclick="setEventRsvp('going')">Going</button>
+        <button type="button" class="rsvp-pill" id="rsvp-maybe" onclick="setEventRsvp('maybe')">Maybe</button>
+        <button type="button" class="rsvp-pill" id="rsvp-none" onclick="setEventRsvp('none')">Not going</button>
+      </div>
+      <div class="detail-actions-primary">
+        <button class="detail-action-btn" type="button" onclick="shareEvent()">Share</button>
+        <button class="detail-action-btn" type="button" onclick="shareEventWhatsApp()">WhatsApp</button>
+        <button class="detail-action-btn" type="button" onclick="openMapForCurrentEvent()">Map</button>
+        <button class="detail-action-btn" type="button" onclick="downloadIcsForCurrentEvent()">Calendar</button>
+      </div>
+      <div class="section-title" id="detail-photos-title" style="display:none">Media</div>
+      <div class="photo-grid" id="detail-photo-grid"></div>
+      <details class="more-details" id="detail-host-tools" ontoggle="onHostToolsToggle()">
+        <summary>Host tools</summary>
       <div class="ticket-wrap">
         <div class="ticket-title">Ticket Purchase</div>
         <div class="ticket-sub" id="ticket-subtext">Buy tickets and send invoice to organiser WhatsApp.</div>
@@ -207,8 +222,6 @@
         <button class="ticket-buy-btn" type="button" onclick="buyTicketsForCurrentEvent()">Buy Ticket</button>
         <div class="ticket-buyers" id="ticket-buyers-list"></div>
       </div>
-      <div class="section-title" id="detail-photos-title" style="display:none">Media</div>
-      <div class="photo-grid" id="detail-photo-grid"></div>
       <div class="community-wrap">
         <div class="community-title">Community Chat & Contributions</div>
         <div class="community-auth" id="community-auth-state">Checking sign-in...</div>
@@ -228,21 +241,12 @@
         <div class="community-upload-label" id="community-upload-label"></div>
         <div class="community-list" id="community-list"></div>
       </div>
-    </div>
-    <div class="detail-actions">
-      <button class="detail-action-btn" onclick="shareEvent()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-        Share
-      </button>
-      <button class="detail-action-btn" onclick="sendSmsReminderForCurrentEvent()">SMS</button>
-      <button class="detail-action-btn" onclick="openMapForCurrentEvent()">Map</button>
-      <button class="detail-action-btn" onclick="addToGoogleCalendar()">Google</button>
-      <button class="detail-action-btn" onclick="downloadIcsForCurrentEvent()">.ics</button>
-      <button class="detail-action-btn" onclick="downloadEventPdfForCurrentEvent()">PDF</button>
-      <button class="detail-action-btn red" onclick="deleteCurrentEvent()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
-        Delete
-      </button>
+      <div class="detail-actions">
+        <button class="detail-action-btn" onclick="sendSmsReminderForCurrentEvent()">SMS</button>
+        <button class="detail-action-btn" onclick="addToGoogleCalendar()">Google</button>
+        <button class="detail-action-btn" onclick="downloadEventPdfForCurrentEvent()">PDF</button>
+      </div>
+      </details>
     </div>
   </div>
 </div>
@@ -260,20 +264,65 @@
     <div style="height:20px"></div>
 
     <div class="form-section">
-      <div class="form-label">Event Name <span class="required-mark">*</span></div>
+      <button type="button" class="flyer-drop" id="flyer-drop" onclick="startFlyerCapture()">
+        <strong>Add a flyer</strong>
+        <span>Scan a poster or WhatsApp image. Name, date, and place fill in when we can read them.</span>
+      </button>
+      <div class="photo-picker-area" id="photo-picker-area" onclick="document.getElementById('photo-input').click()" style="margin-top:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>Add photos or video</span>
+        <small>Optional. Helps you recognise the event later.</small>
+      </div>
+      <input type="file" id="photo-input" accept="image/*,video/*" multiple>
+      <input type="file" id="album-input" accept="image/*,video/*" multiple webkitdirectory directory>
+      <div class="media-limit-note" id="media-limit-note"></div>
+      <div class="media-usage" id="media-usage"></div>
+      <div class="import-progress" id="import-progress">
+        <div class="import-progress-bar" id="import-progress-bar"></div>
+      </div>
+      <div class="import-progress-label" id="import-progress-label"></div>
+      <div class="picked-previews" id="picked-previews"></div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label" for="field-name">Event name <span class="required-mark">*</span></label>
       <div class="form-field">
-        <input class="form-input" id="field-name" type="text" placeholder="e.g. Amanpiano Pool Party 2024">
+        <input class="form-input" id="field-name" type="text" placeholder="e.g. Amanpiano Pool Party" autocomplete="off">
       </div>
       <div class="field-error" id="field-name-error"></div>
     </div>
 
     <div class="form-section">
-      <div class="form-label">Details <span class="required-mark">(Date & Location required)</span></div>
+      <label class="form-label" for="field-date">When <span class="required-mark">*</span></label>
       <div class="form-field">
         <div class="form-input-row" id="field-date-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="field-date" placeholder="Date" aria-required="true">
+          <input type="date" id="field-date" aria-required="true">
         </div>
+      </div>
+      <div class="field-error" id="field-date-error"></div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label" for="field-location">Where <span class="required-mark">*</span></label>
+      <div class="form-field">
+        <div class="form-input-row" id="field-location-row" style="border-bottom:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" id="field-location" placeholder="Venue / Location" aria-required="true">
+        </div>
+      </div>
+      <div class="field-error" id="field-location-error"></div>
+    </div>
+
+    <button class="save-btn" onclick="saveEvent()" id="save-btn"><span class="save-btn-inner" id="save-btn-inner">Save Event</span></button>
+    <div class="save-status" id="save-status"></div>
+
+    <details class="more-details" id="create-more">
+      <summary>More details</summary>
+
+    <div class="form-section">
+      <div class="form-label">Time</div>
+      <div class="form-field">
         <div class="form-input-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
           <input type="time" id="field-start-time" placeholder="Start time (optional)">
@@ -282,25 +331,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
           <input type="time" id="field-end-time" placeholder="End time (optional)">
         </div>
-        <div class="form-input-row">
+        <div class="form-input-row" style="border-bottom:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           <input type="text" id="field-timezone" placeholder="Timezone (e.g. Africa/Lagos)">
         </div>
-        <div class="form-input-row" id="field-location-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" id="field-location" placeholder="Venue / Location" aria-required="true">
-        </div>
-        <div class="form-input-row" style="border-bottom:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-          <input type="text" id="field-client" placeholder="Client / Organiser (optional)">
-        </div>
       </div>
-      <div class="field-error" id="field-date-error"></div>
-      <div class="field-error" id="field-location-error"></div>
     </div>
 
     <div class="form-section">
-      <div class="form-label">Description</div>
+      <label class="form-label" for="field-desc">Description</label>
       <div class="form-field">
         <textarea class="form-input" id="field-desc" placeholder="Brief description of the event…"></textarea>
       </div>
@@ -365,7 +404,8 @@
         </div>
       </div>
       <div class="form-field" style="margin-top:8px;border:none;background:transparent;">
-        <select id="field-watermark" class="form-select">
+        <select id="field-watermark" class="form-select" aria-label="Watermark">
+          <option value="">No watermark</option>
           <option value="@EnuguGod">@EnuguGod</option>
           <option value="Alusi Oringo">Alusi Oringo</option>
           <option value="Uphill Lens Productions">Uphill Lens Productions</option>
@@ -376,41 +416,20 @@
     </div>
 
     <div class="form-section">
-      <div class="form-label">Promotion Intelligence</div>
+      <div class="form-label">Client / Organiser</div>
       <div class="form-field">
-        <div class="discover-item-meta">Auto mode is enabled. Trend and success are estimated from community activity, media volume, and event timing.</div>
+        <input class="form-input" id="field-client" type="text" placeholder="Client / Organiser (optional)">
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="form-label">Media</div>
-      <div class="photo-picker-area" id="photo-picker-area" onclick="document.getElementById('photo-input').click()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span>Add Media from Gallery</span>
-        <small>Select multiple photos/videos from your albums</small>
-      </div>
-      <input type="file" id="photo-input" accept="image/*,video/*" multiple>
-      <input type="file" id="album-input" accept="image/*,video/*" multiple webkitdirectory directory>
-      <button type="button" class="album-import-btn" onclick="document.getElementById('album-input').click()">
-        Import Album Folder (adds all media inside)
-      </button>
-      <button type="button" class="album-import-btn" onclick="clearAllPickedMedia()">
-        Clear All Selected Media
-      </button>
-      <button type="button" class="flyer-autofill-btn" onclick="autoFillFromFlyer()">
-        Auto-fill Interested Event From Flyer
-      </button>
-      <div class="media-limit-note" id="media-limit-note"></div>
-      <div class="media-usage" id="media-usage"></div>
-      <div class="import-progress" id="import-progress">
-        <div class="import-progress-bar" id="import-progress-bar"></div>
-      </div>
-      <div class="import-progress-label" id="import-progress-label"></div>
-      <div class="picked-previews" id="picked-previews"></div>
-    </div>
+    <button type="button" class="album-import-btn" onclick="document.getElementById('album-input').click()">
+      Import Album Folder (adds all media inside)
+    </button>
+    <button type="button" class="album-import-btn" onclick="clearAllPickedMedia()">
+      Clear All Selected Media
+    </button>
+    </details>
 
-    <button class="save-btn" onclick="saveEvent()" id="save-btn"><span class="save-btn-inner" id="save-btn-inner">Save Event</span></button>
-    <div class="save-status" id="save-status"></div>
     <button class="danger-btn" id="delete-btn" onclick="deleteCurrentEvent()" style="display:none;margin-bottom:20px">Delete Event</button>
     <div style="height:40px"></div>
   </div>

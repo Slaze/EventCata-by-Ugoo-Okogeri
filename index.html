@@ -3,12 +3,14 @@
 <head>
   
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="EventCata">
-<meta name="theme-color" content="#000000">
-<title>EventCata by Ugoo Okogeri</title>
+<meta name="theme-color" content="#0a84ff">
+<meta property="og:title" content="EventCata">
+<meta property="og:description" content="What’s on — upcoming events as posters. Going, interested, share a link.">
+<title>EventCata</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
@@ -21,9 +23,20 @@
 <!-- style extracted -->
 
   <link rel="stylesheet" href="/src/styles.css">
+  <style>
+    html, body { height: 100%; background: #070b13; color: #fff; margin: 0; }
+    #app-root .app-splash { position: fixed; inset: 0; z-index: 650; display: flex; align-items: center; justify-content: center; background: #070b13; }
+  </style>
 </head>
-<body>
-  <div id="app-root" aria-live="polite"></div>
+<body class="splash-active">
+  <div id="app-root" aria-live="polite">
+    <div class="app-splash" id="app-splash" role="status">
+      <div class="app-splash-card">
+        <div class="app-splash-title">EventCata</div>
+        <div class="app-splash-loader" aria-label="Loading"></div>
+      </div>
+    </div>
+  </div>
   <noscript><div style="padding:20px;text-align:center">JavaScript is required for EventCata.</div></noscript>
   <script src="https://www.googletagmanager.com/gtag/js?id=G-WJY3X79G6K"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -31,7 +44,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="/src/app.js"></script>
+  <script type="module" src="/src/app.js?v=11"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(()=>{/*sw reg failed*/});

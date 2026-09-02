@@ -1,4 +1,4 @@
-const SW_VERSION = 'v7';
+const SW_VERSION = 'v11';
 const APP_SHELL_CACHE = `eventcat-app-shell-${SW_VERSION}`;
 const RUNTIME_CACHE = `eventcat-runtime-${SW_VERSION}`;
 const TILE_CACHE = `eventcat-tiles-${SW_VERSION}`;
@@ -6,6 +6,10 @@ const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/screens/body-content.html',
+  '/src/app.js',
+  '/src/catalog.js',
+  '/src/styles.css',
+  '/offline.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
