@@ -14,6 +14,10 @@ Verbose non-technical design doc at `docs/GDD.md`. Shared skeleton: `~/symbiotic
 
 ## Sessions
 
+### 2026-10-06 — Stem catalog + GDD
+- GDD v0.1 at `docs/GDD.md` (pushed earlier).
+- Seeded into Stem featured as slug `eventcata` → https://stem.iconiaglobal.com (launch URL still Vercel production).
+
 ### 2026-09-02 — Git commit
 Working tree committed as `e96853c` (not pushed). Money MIT unchanged.
 
