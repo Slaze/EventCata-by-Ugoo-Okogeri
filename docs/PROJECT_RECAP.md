@@ -6,7 +6,16 @@
 
 **Inception → now:** Vanilla IndexedDB PWA on Vercel → 2026-09-02 Luma critique (black first paint, ops dashboard) → MUST-FIX catalogue-first pass in `index.original.html` → same-day parallel `catalog.js` rewrite (demo events, `/e/{id}`) briefly hijacked the live path → 2026-09-02 browser loop rewired extract to original, verified create/RSVP/share/`/detail?id=` on `http://127.0.0.1:8877/` → 2026-09-02 production CLI deploy of the working tree (`dpl_6Y7PXmHEz2jSCyfh7XKWb4jJUyAH`).
 
+## 2026-10-06 — GDD v0.1 written
+
+Verbose non-technical design doc at `docs/GDD.md`. Shared skeleton: `~/symbiotic-profile/GDD_SKELETON.md`.
+
+---
+
 ## Sessions
+
+### 2026-09-02 — Git commit
+Working tree committed as `e96853c` (not pushed). Money MIT unchanged.
 
 ### 2026-09-02 — Production deploy (Vercel CLI, uncommitted tree)
 
