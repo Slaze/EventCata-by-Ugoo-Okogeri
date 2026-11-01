@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://event-cata-by-ugoo-okogeri.vercel.app/sitemap.xml
